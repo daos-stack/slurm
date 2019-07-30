@@ -77,21 +77,40 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.centos.7'
                             label 'docker_runner'
+                            args '--group-add mock' +
+                                 ' --cap-add=SYS_ADMIN' +
+                                 ' --privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)'
                         }
                     }
                     steps {
                         sh '''rm -rf artifacts/centos7/
                               mkdir -p artifacts/centos7/
-                              make spec
                               make srpm
-                              ln _topdir/SRPMS/* artifacts/centos7/
-                              make rpms
-                              ln _topdir/RPMS/*/* artifacts/centos7/
-                              createrepo artifacts/centos7/'''
+                              make mockbuild'''
                     }
                     post {
-                        always {
+                        success {
+                            sh '''(cd /var/lib/mock/epel-7-x86_64/result/ &&
+                                   cp -r . $OLDPWD/artifacts/centos7/)
+                                  createrepo artifacts/centos7/'''
+                        }
+                        unsuccessful {
+                            sh '''cp -af _topdir/SRPMS artifacts/centos7/
+                                  (cd /var/lib/mock/epel-7-x86_64/result/ &&
+                                   cp -r . $OLDPWD/artifacts/centos7/)
+                                  (cd /var/lib/mock/epel-7-x86_64/root/builddir/build/BUILD/*/
+                                   find . -name configure -printf %h\\\\n | \
+                                   while read dir; do
+                                       if [ ! -f $dir/config.log ]; then
+                                           continue
+                                       fi
+                                       tdir="$OLDPWD/artifacts/centos7/autoconf-logs/$dir"
+                                       mkdir -p $tdir
+                                       cp -a $dir/config.log $tdir/
+                                   done)'''
+                        }
+                        cleanup {
                             archiveArtifacts artifacts: 'artifacts/centos7/**'
                         }
                     }

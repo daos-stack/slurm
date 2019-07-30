@@ -31,10 +31,4 @@ RUN usermod -a -G mock $USER
 RUN grep use_nspawn || \
     echo "config_opts['use_nspawn'] = False" >> /etc/mock/site-defaults.cfg
 
-# SLURM dependencies
-RUN yum install -y gcc mariadb-devel munge munge-devel munge-libs \
-               ncurses-devel openssl openssl-devel pam-devel readline-devel \
-               perl-DBI perl-ExtUtils-MakeMaker perl-Switch
-
-RUN yum list installed
 
