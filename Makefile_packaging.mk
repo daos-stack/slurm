@@ -9,7 +9,23 @@
 ifeq ($(DEB_NAME),)
 DEB_NAME := $(NAME)
 endif
+
+# Find out what we are
 ID_LIKE := $(shell . /etc/os-release; echo $$ID_LIKE)
+# Of course that does not work for SLES-12
+ID := $(shell . /etc/os-release; echo $$ID)
+VERSION_ID := $(shell . /etc/os-release; echo $$VERSION_ID)
+ifeq ($(findstring opensuse,$(ID)),opensuse)
+ID_LIKE := suse
+DISTRO_ID := sl$(VERSION_ID)
+endif
+ifeq ($(ID),sles)
+# SLES-12 or 15 detected.
+ID_LIKE := suse
+DISTRO_ID := sle$(VERSION_ID)
+endif
+
+
 COMMON_RPM_ARGS := --define "%_topdir $$PWD/_topdir"
 DIST    := $(shell rpm $(COMMON_RPM_ARGS) --eval %{?dist})
 ifeq ($(DIST),)
@@ -192,8 +208,14 @@ debs: $(DEBS)
 ls: $(TARGETS)
 	ls -ld $^
 
-mockbuild: $(SRPM) Makefile
+ifneq ($(ID_LIKE),suse)
+mockbuild: $(SRPM)  Makefile
+
 	mock $(MOCK_OPTIONS) $(RPM_BUILD_OPTIONS) $<
+else
+mockbuild: Makefile $(SOURCES)
+	sudo build --repo zypp:// --dist $(DISTRO_ID) $(RPM_BUILD_OPTIONS)
+endif
 
 rpmlint: $(SPEC)
 	rpmlint $<
