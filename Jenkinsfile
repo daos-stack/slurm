@@ -63,8 +63,7 @@ pipeline {
                     }
                     steps {
                         // slurm.spec fails lint.
-                        sh script: '''make spec
-                                      make rpmlint''',
+                        sh script: 'make rpmlint',
                            returnStatus: true
                     }
                 }
@@ -86,7 +85,6 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/centos7/
                               mkdir -p artifacts/centos7/
-                              make srpm
                               make mockbuild'''
                     }
                     post {

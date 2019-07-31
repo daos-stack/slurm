@@ -61,16 +61,23 @@ _topdir/SOURCES/%: % | _topdir/SOURCES/
 	rm -f $@
 	ln $< $@
 
-$(NAME)-$(VERSION).tar.$(SRC_EXT).asc:
+clean_tarball: $(NAME).spec Makefile
+	rm -rf _topdir
+	rm -f $(NAME)-$(VERSION).tar.*.asc \
+	      $(NAME)-$(VERSION).tar.* \
+	      v$(VERSION).tar.* \
+	      $(VERSION).tar.*
+
+$(NAME)-$(VERSION).tar.$(SRC_EXT).asc: clean_tarball
 	curl -f -L -O '$(SOURCE).asc'
 
-$(NAME)-$(VERSION).tar.$(SRC_EXT):
+$(NAME)-$(VERSION).tar.$(SRC_EXT): clean_tarball
 	curl -f -L -O '$(SOURCE)'
 
-v$(VERSION).tar.$(SRC_EXT):
+v$(VERSION).tar.$(SRC_EXT):  clean_tarball
 	curl -f -L -O '$(SOURCE)'
 
-$(VERSION).tar.$(SRC_EXT):
+$(VERSION).tar.$(SRC_EXT):  clean_tarball
 	curl -f -L -O '$(SOURCE)'
 
 $(DEB_TOP)/%: % | $(DEB_TOP)/
@@ -173,11 +180,11 @@ $(subst deb,%,$(DEBS)): $(DEB_BUILD).tar.$(SRC_EXT) \
 	  echo $$f; dpkg -c $$f; done
 
 $(SRPM): $(SPEC) $(SOURCES)
-	rpmbuild -bs $(COMMON_RPM_ARGS) $(SPEC)
+	rpmbuild -bs $(COMMON_RPM_ARGS) $(RPM_BUILD_OPTIONS) $(SPEC)
 
 srpm: $(SRPM)
 
-$(RPMS): Makefile
+$(RPMS): $(SRPM) Makefile
 
 rpms: $(RPMS)
 
@@ -189,14 +196,10 @@ ls: $(TARGETS)
 	ls -ld $^
 
 mockbuild: $(SRPM) Makefile
-	mock $(MOCK_OPTIONS) $<
+	mock $(MOCK_OPTIONS) $(RPM_BUILD_OPTIONS) $<
 
 rpmlint: $(SPEC)
 	rpmlint $<
-
-# Debian wants a distclean target
-#distclean:
-#	@echo "distclean"
 
 check-env:
 ifndef DEBEMAIL
@@ -224,4 +227,6 @@ show_sources:
 show_targets:
 	@echo $(TARGETS)
 
-.PHONY: srpm rpms debs ls mockbuild rpmlint FORCE show_version show_release show_rpms show_source show_sources show_targets check-env
+.PHONY: clean_tarball srpm rpms debs ls mockbuild rpmlint FORCE \
+        show_version show_release show_rpms show_source show_sources \
+        show_targets check-env
