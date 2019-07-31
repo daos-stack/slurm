@@ -61,23 +61,20 @@ _topdir/SOURCES/%: % | _topdir/SOURCES/
 	rm -f $@
 	ln $< $@
 
-clean_tarball: $(NAME).spec Makefile
-	rm -rf _topdir
-	rm -f $(NAME)-$(VERSION).tar.*.asc \
-	      $(NAME)-$(VERSION).tar.* \
-	      v$(VERSION).tar.* \
-	      $(VERSION).tar.*
-
-$(NAME)-$(VERSION).tar.$(SRC_EXT).asc: clean_tarball
+$(NAME)-$(VERSION).tar.$(SRC_EXT).asc: $(NAME).spec Makefile
+	rm -f $(NAME)-$(VERSION).tar.{gz,bz*,xz}.asc
 	curl -f -L -O '$(SOURCE).asc'
 
-$(NAME)-$(VERSION).tar.$(SRC_EXT): clean_tarball
+$(NAME)-$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f $(NAME)-$(VERSION).tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
-v$(VERSION).tar.$(SRC_EXT):  clean_tarball
+v$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f v$(VERSION).tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
-$(VERSION).tar.$(SRC_EXT):  clean_tarball
+$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f $(VERSION).tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
 $(DEB_TOP)/%: % | $(DEB_TOP)/
@@ -227,6 +224,6 @@ show_sources:
 show_targets:
 	@echo $(TARGETS)
 
-.PHONY: clean_tarball srpm rpms debs ls mockbuild rpmlint FORCE \
+.PHONY: srpm rpms debs ls mockbuild rpmlint FORCE \
         show_version show_release show_rpms show_source show_sources \
         show_targets check-env

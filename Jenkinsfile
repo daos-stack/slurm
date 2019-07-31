@@ -131,11 +131,8 @@ pipeline {
                         sh '''rm -rf artifacts/sles12.3/
                               mkdir -p artifacts/sles12.3/
                               rm -rf _topdir/SRPMS _topdir/RPMS
-                              make spec
-                              make srpm
-                              ln _topdir/SRPMS/* artifacts/sles12.3/
                               make rpms
-                              ln _topdir/RPMS/*/* artifacts/sles12.3/
+                              ln _topdir/{RPMS/*,SRPMS}/* artifacts/sles12.3/
                               createrepo artifacts/sles12.3/'''
                     }
                     post {
@@ -160,11 +157,8 @@ pipeline {
                         sh '''rm -rf artifacts/leap42.3/
                               mkdir -p artifacts/leap42.3/
                               rm -rf _topdir/SRPMS _topdir/RPMS
-                              make spec
-                              make srpm
-                              ln _topdir/SRPMS/* artifacts/leap42.3/
                               make rpms
-                              ln _topdir/RPMS/*/* artifacts/leap42.3/
+                              ln _topdir/{RPMS/*,SRPMS}/* artifacts/leap42.3/
                               createrepo artifacts/leap42.3/'''
                     }
                     post {
