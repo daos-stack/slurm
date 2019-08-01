@@ -63,7 +63,8 @@ pipeline {
                     }
                     steps {
                         // slurm.spec fails lint.
-                        sh script: 'make rpmlint',
+                        sh script: '''cp -f slurm.spec_centos slurm.spec
+                                      make rpmlint''',
                            returnStatus: true
                     }
                 }
@@ -85,6 +86,7 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/centos7/
                               mkdir -p artifacts/centos7/
+                              cp -f slurm.spec_centos slurm.spec
                               make chrootbuild'''
                     }
                     post {
@@ -131,13 +133,14 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/sles12.3/
                               mkdir -p artifacts/sles12.3/
+                              cp -f slurm.spec_sles12 slurm.spec
                               make chrootbuild'''
                     }
                     post {
                         success {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
                                    cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
-                                  createrepo artifacts/leap42.3/'''
+                                  createrepo artifacts/sles12.3/'''
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
@@ -146,13 +149,13 @@ pipeline {
                                        if [ ! -f $dir/config.log ]; then
                                            continue
                                        fi
-                                       tdir="$OLDPWD/artifacts/leap42.3/autoconf-logs/$dir"
+                                       tdir="$OLDPWD/artifacts/sles12.3/autoconf-logs/$dir"
                                        mkdir -p $tdir
                                        cp -a $dir/config.log $tdir/
                                    done)'''
                         }
                         cleanup {
-                            archiveArtifacts artifacts: 'artifacts/leap42.3/**'
+                            archiveArtifacts artifacts: 'artifacts/sles12.3/**'
                         }
                     }
                 }
@@ -172,7 +175,7 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/leap42.3/
                               mkdir -p artifacts/leap42.3/
-                              rm -rf _topdir/SRPMS _topdir/RPMS
+                              cp -f slurm.spec_sles12 slurm.spec
                               make chrootbuild'''
                     }
                     post {
