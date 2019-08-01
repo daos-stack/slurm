@@ -63,8 +63,7 @@ pipeline {
                     }
                     steps {
                         // slurm.spec fails lint.
-                        sh script: '''make spec
-                                      make rpmlint''',
+                        sh script: 'make rpmlint',
                            returnStatus: true
                     }
                 }
@@ -86,8 +85,7 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/centos7/
                               mkdir -p artifacts/centos7/
-                              make srpm
-                              make mockbuild'''
+                              make chrootbuild'''
                     }
                     post {
                         success {
@@ -122,6 +120,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.sles.12.3'
                             label 'docker_runner'
+                            args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)' +
                                                 ' --build-arg JENKINS_URL=' +
                                                   env.JENKINS_URL +
@@ -132,17 +131,28 @@ pipeline {
                     steps {
                         sh '''rm -rf artifacts/sles12.3/
                               mkdir -p artifacts/sles12.3/
-                              rm -rf _topdir/SRPMS _topdir/RPMS
-                              make spec
-                              make srpm
-                              ln _topdir/SRPMS/* artifacts/sles12.3/
-                              make rpms
-                              ln _topdir/RPMS/*/* artifacts/sles12.3/
-                              createrepo artifacts/sles12.3/'''
+                              make chrootbuild'''
                     }
                     post {
-                        always {
-                            archiveArtifacts artifacts: 'artifacts/sles12.3/**'
+                        success {
+                            sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
+                                   cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
+                                  createrepo artifacts/leap42.3/'''
+                        }
+                        unsuccessful {
+                            sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
+                                   find . -name configure -printf %h\\\\n | \
+                                   while read dir; do
+                                       if [ ! -f $dir/config.log ]; then
+                                           continue
+                                       fi
+                                       tdir="$OLDPWD/artifacts/leap42.3/autoconf-logs/$dir"
+                                       mkdir -p $tdir
+                                       cp -a $dir/config.log $tdir/
+                                   done)'''
+                        }
+                        cleanup {
+                            archiveArtifacts artifacts: 'artifacts/leap42.3/**'
                         }
                     }
                 }
@@ -151,6 +161,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.leap.42.3'
                             label 'docker_runner'
+                            args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)' +
                                                 ' --build-arg JENKINS_URL=' +
                                                   env.JENKINS_URL +
@@ -162,15 +173,27 @@ pipeline {
                         sh '''rm -rf artifacts/leap42.3/
                               mkdir -p artifacts/leap42.3/
                               rm -rf _topdir/SRPMS _topdir/RPMS
-                              make spec
-                              make srpm
-                              ln _topdir/SRPMS/* artifacts/leap42.3/
-                              make rpms
-                              ln _topdir/RPMS/*/* artifacts/leap42.3/
-                              createrepo artifacts/leap42.3/'''
+                              make chrootbuild'''
                     }
                     post {
-                        always {
+                        success {
+                            sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
+                                   cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
+                                  createrepo artifacts/leap42.3/'''
+                        }
+                        unsuccessful {
+                            sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
+                                   find . -name configure -printf %h\\\\n | \
+                                   while read dir; do
+                                       if [ ! -f $dir/config.log ]; then
+                                           continue
+                                       fi
+                                       tdir="$OLDPWD/artifacts/leap42.3/autoconf-logs/$dir"
+                                       mkdir -p $tdir
+                                       cp -a $dir/config.log $tdir/
+                                   done)'''
+                        }
+                        cleanup {
                             archiveArtifacts artifacts: 'artifacts/leap42.3/**'
                         }
                     }
