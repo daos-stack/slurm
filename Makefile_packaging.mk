@@ -25,6 +25,16 @@ ID_LIKE := suse
 DISTRO_ID := sle$(VERSION_ID)
 endif
 
+# For some reason this is needed for building SLURM as while these
+# repos are present in zypp:// build is not finding packages in it.
+ifeq ($(DISTRO_ID),sle12.3)
+BUILD_OPTIONS += --repo
+BUILD_OPTIONS += http://cobbler/cobbler/repo_mirror/updates-sles12.3-x86_64
+BUILD_OPTIONS += --repo
+BUILD_OPTIONS += http://cobbler/cobbler/repo_mirror/sdkupdate-sles12.3-x86_64
+BUILD_OPTIONS += --repo
+BUILD_OPTIONS += http://cobbler/cobbler/repo_mirror/sdk-sles12.3-x86_64
+endif
 
 COMMON_RPM_ARGS := --define "%_topdir $$PWD/_topdir"
 DIST    := $(shell rpm $(COMMON_RPM_ARGS) --eval %{?dist})
@@ -60,6 +70,7 @@ export LC_ALL = C.UTF-8
 endif
 TARGETS := $(DEBS)
 else
+# CentOS/Suse packages that want a locale set need this.
 ifndef LANG
 export LANG = en_US.utf8
 endif
@@ -77,20 +88,26 @@ _topdir/SOURCES/%: % | _topdir/SOURCES/
 	rm -f $@
 	ln $< $@
 
-$(NAME)-$(VERSION).tar.$(SRC_EXT).asc: $(NAME).spec Makefile
-	rm -f $(NAME)-$(VERSION).tar.{gz,bz*,xz}.asc
+# At least one spec file, SLURM (sles), has a different version for the
+# download file than the version in the spec file.
+ifeq ($(DL_VERSION),)
+DL_VERSION = $(VERSION)
+endif
+
+$(NAME)-$(DL_VERSION).tar.$(SRC_EXT).asc: $(NAME).spec Makefile
+	rm -f ./$(NAME)-*.tar.{gz,bz*,xz}.asc
 	curl -f -L -O '$(SOURCE).asc'
 
-$(NAME)-$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
-	rm -f $(NAME)-$(VERSION).tar.{gz,bz*,xz}
+$(NAME)-$(DL_VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f ./$(NAME)-*.tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
-v$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
-	rm -f v$(VERSION).tar.{gz,bz*,xz}
+v$(DL_VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f ./v*.tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
-$(VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
-	rm -f $(VERSION).tar.{gz,bz*,xz}
+$(DL_VERSION).tar.$(SRC_EXT): $(NAME).spec Makefile
+	rm -f ./*.tar.{gz,bz*,xz}
 	curl -f -L -O '$(SOURCE)'
 
 $(DEB_TOP)/%: % | $(DEB_TOP)/
@@ -209,12 +226,13 @@ ls: $(TARGETS)
 	ls -ld $^
 
 ifneq ($(ID_LIKE),suse)
-mockbuild: $(SRPM)  Makefile
+chrootbuild: $(SRPM)  Makefile
 
 	mock $(MOCK_OPTIONS) $(RPM_BUILD_OPTIONS) $<
 else
-mockbuild: Makefile $(SOURCES)
-	sudo build --repo zypp:// --dist $(DISTRO_ID) $(RPM_BUILD_OPTIONS)
+chrootbuild: Makefile $(SOURCES)
+	sudo build $(BUILD_OPTIONS) --repo zypp:// \
+	   --dist $(DISTRO_ID) $(RPM_BUILD_OPTIONS)
 endif
 
 rpmlint: $(SPEC)
@@ -246,6 +264,6 @@ show_sources:
 show_targets:
 	@echo $(TARGETS)
 
-.PHONY: srpm rpms debs ls mockbuild rpmlint FORCE \
+.PHONY: srpm rpms debs ls chrootbuild rpmlint FORCE \
         show_version show_release show_rpms show_source show_sources \
         show_targets check-env
