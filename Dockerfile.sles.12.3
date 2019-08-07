@@ -63,4 +63,3 @@ RUN zypper --non-interactive ar --gpgcheck-allow-unsigned -f \
 # And the zypper lr report is handy to have.
 ARG CACHEBUST=1
 RUN zypper --non-interactive --no-gpg-checks refresh; zypper lr --details
-
