@@ -139,7 +139,7 @@ pipeline {
                     post {
                         success {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
-                                   cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
+                                   cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/sles12.3/)
                                   createrepo artifacts/sles12.3/'''
                         }
                         unsuccessful {
