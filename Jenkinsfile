@@ -94,6 +94,11 @@ pipeline {
                             sh '''(cd /var/lib/mock/epel-7-x86_64/result/ &&
                                    cp -r . $OLDPWD/artifacts/centos7/)
                                   createrepo artifacts/centos7/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'el7',
+                                                repo_dir: 'artifacts/centos7/'
                         }
                         unsuccessful {
                             sh '''cp -af _topdir/SRPMS artifacts/centos7/
@@ -124,10 +129,11 @@ pipeline {
                             label 'docker_runner'
                             args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                                ' --build-arg JENKINS_URL=' +
-                                                  env.JENKINS_URL +
-                                                ' --build-arg CACHEBUST=' +
-                                                currentBuild.startTimeInMillis
+                                ' --build-arg REPOSITORY_URL=' +
+                                    env.REPOSITORY_URL + '/' +
+                                ' --build-arg GROUP_REPO=/' +
+                                    env.DAOS_STACK_SLES_12_3_GROUP_REPO
+
                         }
                     }
                     steps {
@@ -141,6 +147,11 @@ pipeline {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
                                    cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/sles12.3/)
                                   createrepo artifacts/sles12.3/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'sles12.3',
+                                                repo_dir: 'artifacts/sles2.3/'
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
@@ -166,10 +177,10 @@ pipeline {
                             label 'docker_runner'
                             args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                                ' --build-arg JENKINS_URL=' +
-                                                  env.JENKINS_URL +
-                                                ' --build-arg CACHEBUST=' +
-                                                currentBuild.startTimeInMillis
+                                ' --build-arg REPOSITORY_URL=' +
+                                    env.REPOSITORY_URL + '/' +
+                                ' --build-arg GROUP_REPO=/' +
+                                    env.DAOS_STACK_LEAP_42_3_GROUP_REPO
                         }
                     }
                     steps {
@@ -183,6 +194,11 @@ pipeline {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
                                    cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
                                   createrepo artifacts/leap42.3/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'leap42.3',
+                                                repo_dir: 'artifacts/leap42.3/'
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
