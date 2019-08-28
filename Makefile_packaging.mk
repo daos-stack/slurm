@@ -251,9 +251,6 @@ sl15_REPOS += --repo http://download.opensuse.org/update/leap/15.1/oss/         
 	      --repo http://download.opensuse.org/distribution/leap/15.1/repo/oss/
 
 chrootbuild: $(SRPM) Makefile
-ifneq ($(REPOSITORY_URL),"")
-	sudo zypper --non-interactive --no-gpg-checks refresh
-endif
 	add_repos="";                                                       \
 	for repo in $(ADD_REPOS); do                                        \
 	    if [[ $$repo = *@* ]]; then                                     \

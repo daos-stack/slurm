@@ -46,10 +46,3 @@ RUN set -x; zypper --non-interactive ar ${TOOLS}; \
       'openSUSE.org tools (openSUSE_42.3)'
 
 RUN zypper --non-interactive in build
-
-ARG REPOSITORY_URL=""
-ARG GROUP_REPO=""
-RUN if [ ${#REPOSITORY_URL} -ge 2 ]; then \
-    zypper --non-interactive ar ${REPOSITORY_URL}${GROUP_REPO} \
-        daos-stack-group-repo;\
-    zypper --non-interactive --no-gpg-checks refresh; fi

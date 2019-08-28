@@ -30,10 +30,10 @@ RPM_BUILD_OPTIONS := --with=mysql
 OSUSE_REPOS = https://download.opensuse.org/repositories
 ifneq ($(REPOSITORY_URL),"")
 ifneq ($(DAOS_STACK_SLES_12_3_GROUP_REPO),"")
-sle12_REPOS = --repo zypp://daos-stack-group-repo
+sle12_REPOS = --repo $(REPOSITORY_URL)$(DAOS_STACK_SLES_12_3_GROUP_REPO)
 endif
 ifneq ($(DAOS_STACK_LEAP_42_3_GROUP_REPO),"")
-sl42_REPOS = --repo zypp://daos-stack-group-repo
+sl42_REPOS = --repo $(REPOSITORY_URL)$(DAOS_STACK_LEAP_42_3_GROUP_REPO)
 endif
 else
 ifneq ($(ID),centos)

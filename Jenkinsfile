@@ -128,12 +128,7 @@ pipeline {
                             filename 'Dockerfile.sles.12.3'
                             label 'docker_runner'
                             args '--privileged=true'
-                            additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                ' --build-arg REPOSITORY_URL=' +
-                                    env.REPOSITORY_URL + '/' +
-                                ' --build-arg GROUP_REPO=/' +
-                                    env.DAOS_STACK_SLES_12_3_GROUP_REPO
-
+                            additionalBuildArgs '--build-arg UID=$(id -u)'
                         }
                     }
                     steps {
@@ -151,7 +146,7 @@ pipeline {
                                                 format: 'yum',
                                                 maturity: 'stable',
                                                 tech: 'sles12.3',
-                                                repo_dir: 'artifacts/sles2.3/'
+                                                repo_dir: 'artifacts/sles12.3/'
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
@@ -176,11 +171,7 @@ pipeline {
                             filename 'Dockerfile.leap.42.3'
                             label 'docker_runner'
                             args '--privileged=true'
-                            additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                ' --build-arg REPOSITORY_URL=' +
-                                    env.REPOSITORY_URL + '/' +
-                                ' --build-arg GROUP_REPO=/' +
-                                    env.DAOS_STACK_LEAP_42_3_GROUP_REPO
+                            additionalBuildArgs '--build-arg UID=$(id -u)'
                         }
                     }
                     steps {
