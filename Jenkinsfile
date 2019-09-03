@@ -55,7 +55,7 @@ pipeline {
                 stage('RPM Lint') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.centos.7'
+                            filename 'packaging/Dockerfile.centos.7'
                             label 'docker_runner'
                             additionalBuildArgs  '--build-arg UID=$(id -u)'
                             args  '--group-add mock --cap-add=SYS_ADMIN --privileged=true'
@@ -67,7 +67,31 @@ pipeline {
                                       make rpmlint''',
                            returnStatus: true
                     }
-                }
+                } // stage('RPM Lint')
+                stage('Check Packaging') {
+                    agent { label 'lightweight' }
+                    steps {
+                        checkoutScm url: 'https://github.com/daos-stack/packaging.git',
+                                    checkoutDir: 'packaging-module'
+                        catchError(stageResult: 'UNSTABLE', buildResult: 'SUCCESS') {
+                            sh 'make PACKAGING_CHECK_DIR=packaging-module' +
+                               ' packaging_check'
+                        }
+                    }
+                    post {
+                        unsuccessful {
+                            emailext body: 'Packaging out of date for ' +
+                                            jobName() + '.\n' +
+                                            'You should update it and submit your PR again.',
+                                     recipientProviders: [
+                                          [$class: 'DevelopersRecipientProvider'],
+                                          [$class: 'RequesterRecipientProvider']
+                                     ],
+                                     subject: 'Packaging is out of date for ' +
+                                              jobName()
+                        }
+                    }
+                } //stage('Check Packaging')
             }
         }
         stage('Build') {
@@ -75,7 +99,7 @@ pipeline {
                 stage('Build on CentOS 7') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.centos.7'
+                            filename 'packaging/Dockerfile.centos.7'
                             label 'docker_runner'
                             args '--group-add mock' +
                                  ' --cap-add=SYS_ADMIN' +
@@ -125,7 +149,7 @@ pipeline {
                            environment name: 'SLES12_3_DOCKER', value: 'true' }
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.sles.12.3'
+                            filename 'packaging/Dockerfile.sles.12.3'
                             label 'docker_runner'
                             args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)'
@@ -168,7 +192,7 @@ pipeline {
                 stage('Build on Leap 42.3') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.leap.42.3'
+                            filename 'packaging/Dockerfile.leap.42.3'
                             label 'docker_runner'
                             args '--privileged=true'
                             additionalBuildArgs '--build-arg UID=$(id -u)'

@@ -43,5 +43,5 @@ endif
 
 sle12_REPOS += --repo $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
 
-include Makefile_packaging.mk
+include packaging/Makefile_packaging.mk
 

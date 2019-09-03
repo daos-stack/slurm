@@ -5,7 +5,7 @@
 #
 
 # Pull base image
-FROM opensuse/leap:42.3
+FROM opensuse/leap:15
 MAINTAINER daos-stack <daos@daos.groups.io>
 
 # use same UID as host and default value of 1000 if not specified
@@ -31,18 +31,15 @@ RUN if ! grep "^#includedir /etc/sudoers.d" /etc/sudoers; then              \
         echo "#includedir /etc/sudoers.d" >> /etc/sudoers;                  \
     fi;                                                                     \
     echo "build ALL=(ALL) NOPASSWD: /usr/bin/build" > /etc/sudoers.d/build; \
-    echo "build ALL=(ALL) NOPASSWD: /bin/rpm" >> /etc/sudoers.d/build;      \
-    echo "build ALL=(ALL) NOPASSWD: /usr/bin/zypper --non-interactive --no-gpg-checks refresh" \
-      >> /etc/sudoers.d/build;                                              \
     chmod 0440 /etc/sudoers.d/build;                                        \
     visudo -c;                                                              \
     sudo -l -U build
 
 ENV OPENSUSE_REPO="https://download.opensuse.org/repositories"
-ENV TOOLS="${OPENSUSE_REPO}/openSUSE:Tools/openSUSE_42.3/openSUSE:Tools.repo"
+ENV TOOLS="${OPENSUSE_REPO}/openSUSE:Tools/openSUSE_15.1/openSUSE:Tools.repo"
 
 RUN set -x; zypper --non-interactive ar ${TOOLS}; \
     zypper --non-interactive --gpg-auto-import-keys ref \
-      'openSUSE.org tools (openSUSE_42.3)'
+      'openSUSE.org tools (openSUSE_15.1)'
 
 RUN zypper --non-interactive in build
