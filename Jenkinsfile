@@ -51,7 +51,7 @@ pipeline {
             }
         }
         stage('Lint') {
-            stages {
+            parallel {
                 stage('RPM Lint') {
                     agent {
                         dockerfile {
