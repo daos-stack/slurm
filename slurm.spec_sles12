@@ -101,7 +101,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  postgresql10-devel
 BuildRequires:  readline-devel
 %if 0%{?suse_version} > 1310 || 0%{?sle_version}
-BuildRequires:  libibmad-devel
+BuildRequires:  infiniband-diags-devel
 BuildRequires:  libibumad-devel
 %endif
 %if 0%{?suse_version} > 1140

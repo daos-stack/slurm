@@ -51,11 +51,11 @@ pipeline {
             }
         }
         stage('Lint') {
-            stages {
+            parallel {
                 stage('RPM Lint') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.centos.7'
+                            filename 'packaging/Dockerfile.centos.7'
                             label 'docker_runner'
                             additionalBuildArgs  '--build-arg UID=$(id -u)'
                             args  '--group-add mock --cap-add=SYS_ADMIN --privileged=true'
@@ -67,7 +67,31 @@ pipeline {
                                       make rpmlint''',
                            returnStatus: true
                     }
-                }
+                } // stage('RPM Lint')
+                stage('Check Packaging') {
+                    agent { label 'lightweight' }
+                    steps {
+                        checkoutScm url: 'https://github.com/daos-stack/packaging.git',
+                                    checkoutDir: 'packaging-module'
+                        catchError(stageResult: 'UNSTABLE', buildResult: 'SUCCESS') {
+                            sh 'make PACKAGING_CHECK_DIR=packaging-module' +
+                               ' packaging_check'
+                        }
+                    }
+                    post {
+                        unsuccessful {
+                            emailext body: 'Packaging out of date for ' +
+                                            jobName() + '.\n' +
+                                            'You should update it and submit your PR again.',
+                                     recipientProviders: [
+                                          [$class: 'DevelopersRecipientProvider'],
+                                          [$class: 'RequesterRecipientProvider']
+                                     ],
+                                     subject: 'Packaging is out of date for ' +
+                                              jobName()
+                        }
+                    }
+                } //stage('Check Packaging')
             }
         }
         stage('Build') {
@@ -75,7 +99,7 @@ pipeline {
                 stage('Build on CentOS 7') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.centos.7'
+                            filename 'packaging/Dockerfile.centos.7'
                             label 'docker_runner'
                             args '--group-add mock' +
                                  ' --cap-add=SYS_ADMIN' +
@@ -94,6 +118,11 @@ pipeline {
                             sh '''(cd /var/lib/mock/epel-7-x86_64/result/ &&
                                    cp -r . $OLDPWD/artifacts/centos7/)
                                   createrepo artifacts/centos7/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'el-7',
+                                                repo_dir: 'artifacts/centos7/'
                         }
                         unsuccessful {
                             sh '''cp -af _topdir/SRPMS artifacts/centos7/
@@ -120,14 +149,10 @@ pipeline {
                            environment name: 'SLES12_3_DOCKER', value: 'true' }
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.sles.12.3'
+                            filename 'packaging/Dockerfile.sles.12.3'
                             label 'docker_runner'
                             args '--privileged=true'
-                            additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                                ' --build-arg JENKINS_URL=' +
-                                                  env.JENKINS_URL +
-                                                ' --build-arg CACHEBUST=' +
-                                                currentBuild.startTimeInMillis
+                            additionalBuildArgs '--build-arg UID=$(id -u)'
                         }
                     }
                     steps {
@@ -141,6 +166,11 @@ pipeline {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
                                    cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/sles12.3/)
                                   createrepo artifacts/sles12.3/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'sles-12',
+                                                repo_dir: 'artifacts/sles12.3/'
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
@@ -162,14 +192,10 @@ pipeline {
                 stage('Build on Leap 42.3') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.leap.42.3'
+                            filename 'packaging/Dockerfile.leap.42.3'
                             label 'docker_runner'
                             args '--privileged=true'
-                            additionalBuildArgs '--build-arg UID=$(id -u)' +
-                                                ' --build-arg JENKINS_URL=' +
-                                                  env.JENKINS_URL +
-                                                ' --build-arg CACHEBUST=' +
-                                                currentBuild.startTimeInMillis
+                            additionalBuildArgs '--build-arg UID=$(id -u)'
                         }
                     }
                     steps {
@@ -183,6 +209,11 @@ pipeline {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/ &&
                                    cp {RPMS/*,SRPMS}/* $OLDPWD/artifacts/leap42.3/)
                                   createrepo artifacts/leap42.3/'''
+                            publishToRepository product: 'slurm',
+                                                format: 'yum',
+                                                maturity: 'stable',
+                                                tech: 'leap-42',
+                                                repo_dir: 'artifacts/leap42.3/'
                         }
                         unsuccessful {
                             sh '''(cd /var/tmp/build-root/home/abuild/rpmbuild/BUILD &&
