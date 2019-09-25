@@ -28,26 +28,15 @@ endif
 RPM_BUILD_OPTIONS := --with=mysql
 
 OSUSE_REPOS = https://download.opensuse.org/repositories
-ifneq ($(REPOSITORY_URL),"")
-ifneq ($(DAOS_STACK_SLES_12_GROUP_REPO),"")
-sle12_REPOS += --repo $(REPOSITORY_URL)$(DAOS_STACK_SLES_12_GROUP_REPO)
-endif
-ifneq ($(DAOS_STACK_SLES_12_LOCAL_REPO),"")
-sle12_REPOS += --repo $(REPOSITORY_URL)$(DAOS_STACK_SLES_12_LOCAL_REPO)
-endif
-ifneq ($(DAOS_STACK_LEAP_42_GROUP_REPO),"")
-sl42_REPOS += --repo $(REPOSITORY_URL)$(DAOS_STACK_LEAP_42_GROUP_REPO)
-endif
-ifneq ($(DAOS_STACK_LEAP_42_LOCAL_REPO),"")
-sl42_REPOS += --repo $(REPOSITORY_URL)$(DAOS_STACK_LEAP_42_LOCAL_REPO)
-endif
-else
+ifeq ($(REPOSITORY_URL),"")
 ifneq ($(ID),centos)
 ADD_REPOS = "munge"
 endif
+SLES_12_REPOS += $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
+else
+ifeq ($(DAOS_STACK_LEAP_42_GROUP_REPO),)
+SLES_12_REPOS += $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
+endif
 endif
 
-sle12_REPOS += --repo $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
-
 include packaging/Makefile_packaging.mk
-
