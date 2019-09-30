@@ -38,3 +38,4 @@ ifeq ($(DAOS_STACK_SLES_12_GROUP_REPO),)
 SLES_12_REPOS += $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
 endif
 
+include packaging/Makefile_packaging.mk
