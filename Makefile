@@ -29,9 +29,8 @@ RPM_BUILD_OPTIONS := --with=mysql
 
 OSUSE_REPOS = https://download.opensuse.org/repositories
 ifeq ($(REPOSITORY_URL),)
-ifneq ($(ID),centos)
-ADD_REPOS = "munge"
-endif
+SLES_12_PR_REPOS = munge
+LEAP_42_PR_REPOS = $(SLES_12_PR_REPOS)
 endif
 
 ifeq ($(DAOS_STACK_SLES_12_GROUP_REPO),)
