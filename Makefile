@@ -28,10 +28,6 @@ endif
 RPM_BUILD_OPTIONS := --with=mysql
 
 OSUSE_REPOS = https://download.opensuse.org/repositories
-ifeq ($(REPOSITORY_URL),)
-SLES_12_PR_REPOS = munge
-LEAP_42_PR_REPOS = $(SLES_12_PR_REPOS)
-endif
 
 ifeq ($(DAOS_STACK_SLES_12_GROUP_REPO),)
 SLES_12_REPOS += $(OSUSE_REPOS)/science:/HPC:/SLE12SP3_Missing/SLE_12_SP3
