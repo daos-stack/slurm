@@ -309,11 +309,11 @@ notifies slurm about failed nodes.
 # when the rel number is one, the tarball filename does not include it
 %setup -q -n %{slurm_source_dir}
 %if 0%{?rhel} >= 8
-%patch0 -P1
-%patch1 -P1
-%patch2 -P1
-%patch3 -P1
-%patch4 -P1
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 %endif
 
 %build
