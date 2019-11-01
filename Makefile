@@ -6,13 +6,11 @@ SOURCE   = $(URL_BASE)/$(NAME)-$(VERSION).tar.$(SRC_EXT)
 
 ifeq ($(findstring epel,$(CHROOT_NAME)),epel)
 $(shell cp slurm.spec_centos slurm.spec)
-ifeq ($(CHROOT_NAME),epel-8-x86_64)
 PATCHES = slurmconfgen_smw_py.patch
 PATCHES += testsuite_expect_driveregress_py.patch
 PATCHES += testsuite_expect_regression_py.patch
 PATCHES += doc_html_shtml2html_py.patch
 PATCHES += doc_man_man2html_py.patch
-endif
 else
 # Suse has to be different, only care about CentOS or SUSE
 $(shell cp slurm.spec_sles12 slurm.spec)

@@ -16,13 +16,11 @@ URL:		https://slurm.schedmd.com/
 %endif
 
 Source:		%{slurm_source_dir}.tar.bz2
-%if 0%{?rhel} >= 8
 Patch0:   slurmconfgen_smw_py.patch
 Patch1:   testsuite_expect_driveregress_py.patch
 Patch2:   testsuite_expect_regression_py.patch
 Patch3:   doc_html_shtml2html_py.patch
 Patch4:   doc_man_man2html_py.patch
-%endif
 
 # build options		.rpmmacros options	change to default action
 # ====================  ====================	========================
