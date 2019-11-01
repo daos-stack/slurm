@@ -1,0 +1,8 @@
+--- a/contribs/cray/csm/slurmconfgen_smw.py     2019-11-01 19:57:05.789353811 +0000
++++ b/contribs/cray/csm/slurmconfgen_smw.py     2019-11-01 19:55:57.678924176 +0000
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python2
+ #
+ # Copyright 2015-2016 Cray Inc. All Rights Reserved.
+ """ A script to generate slurm.conf and gres.conf for a

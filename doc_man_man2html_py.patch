@@ -1,0 +1,8 @@
+--- a/doc/man/man2html.py  2019-11-01 19:56:45.213224017 +0000
++++ b/doc/man/man2html.py       2019-11-01 20:09:16.526963819 +0000
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python2
+
+ import re
+ import sys
