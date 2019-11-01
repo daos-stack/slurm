@@ -1,4 +1,5 @@
---- a/doc/html/shtml2html.py       2019-11-01 19:56:36.748170620 +0000
+diff -u a/doc/html/shtml2html.py b/doc/html/shtml2html.py
+--- a/doc/html/shtml2html.py    2019-11-01 19:56:36.748170620 +0000
 +++ b/doc/html/shtml2html.py    2019-11-01 20:06:56.034077409 +0000
 @@ -1,4 +1,4 @@
 -#!/usr/bin/env python

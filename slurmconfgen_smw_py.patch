@@ -1,3 +1,4 @@
+diff -u a/contribs/cray/csm/slurmconfgen_smw.py b/contribs/cray/csm/slurmconfgen_smw.py
 --- a/contribs/cray/csm/slurmconfgen_smw.py     2019-11-01 19:57:05.789353811 +0000
 +++ b/contribs/cray/csm/slurmconfgen_smw.py     2019-11-01 19:55:57.678924176 +0000
 @@ -1,4 +1,4 @@

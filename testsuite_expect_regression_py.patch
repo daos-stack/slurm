@@ -1,4 +1,5 @@
---- a/testsuite/expect/regression.py       2019-11-01 19:56:10.848007246 +0000
+diff -u a/testsuite/expect/regression.py b/testsuite/expect/regression.py
+--- a/testsuite/expect/regression.py    2019-11-01 19:56:10.848007246 +0000
 +++ b/testsuite/expect/regression.py    2019-11-01 20:03:18.719706386 +0000
 @@ -1,4 +1,4 @@
 -#!/usr/bin/env python
