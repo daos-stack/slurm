@@ -40,5 +40,5 @@
 // I.e. for testing library changes
 //@Library(value="pipeline-lib@your_branch") _
 
-packageBuildingPipeline(['distros':['centos7','sles12.3','leap42.3'],
+packageBuildingPipeline(['distros':['centos8','centos7'],
                          'rpmlint_check': false])
