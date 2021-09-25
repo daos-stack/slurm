@@ -36,8 +36,8 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 %bcond_with pmix
 %bcond_with nvml
 
-# Use debug by default on all systems
-%bcond_without debug
+# disable debug by default on all systems
+%bcond_with debug
 
 # Options disabled by default
 %bcond_with pam
@@ -288,7 +288,7 @@ notifies slurm about failed nodes.
 
 %prep
 # when the rel number is one, the tarball filename does not include it
-%setup -n %{slurm_source_dir}
+%setup -q -n %{slurm_source_dir}
 
 %build
 %configure \
@@ -596,5 +596,5 @@ rm -rf %{buildroot}
 #############################################################################
 
 %changelog
-* Sat Sep 25 2021 Maureen Jean <maureen.jean@intel.com> - 21.08.1.1
+* Sat Sep 25 2021 Maureen Jean <maureen.jean@intel.com> - 21.08.1.1-1
 - Initial release of slurm
