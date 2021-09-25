@@ -39,9 +39,9 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 # Use debug by default on all systems
 %bcond_without debug
 
-# Options enabled by default
-%bcond_without pam
-%bcond_without x11
+# Options disabled by default
+%bcond_with pam
+%bcond_with x11
 
 # Disable hardened builds. -z,now or -z,relro breaks the plugin stack
 %undefine _hardened_build
