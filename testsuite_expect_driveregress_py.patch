@@ -1,9 +1,0 @@
-diff -u a/testsuite/expect/driveregress.py b/testsuite/expect/driveregress.py
---- a/testsuite/expect/driveregress.py  2019-11-01 19:56:26.763107635 +0000
-+++ b/testsuite/expect/driveregress.py  2019-11-01 20:05:07.903395207 +0000
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python
-+#!/usr/bin/env python2
-
- ############################################################################
- # Copyright (C) 2011-2013 SchedMD LLC
