@@ -10,26 +10,6 @@ Source0: https://github.com/SchedMD/slurm/releases/tag/%{name}-%{version}.tar.gz
 
 %global slurm_source_dir %{name}-%{name}-21-08-1-1
 
-# build options		.rpmmacros options	change to default action
-# ====================  ====================	========================
-# --prefix		%_prefix path		install path for commands, libraries, etc.
-# --with cray		%_with_cray 1		build for a Cray Aries system
-# --with cray_network	%_with_cray_network 1	build for a non-Cray system with a Cray network
-# --with cray_shasta	%_with_cray_shasta 1	build for a Cray Shasta system
-# --with slurmrestd	%_with_slurmrestd 1	build slurmrestd
-# --with slurmsmwd      %_with_slurmsmwd 1      build slurmsmwd
-# --without debug	%_without_debug 1	don't compile with debugging symbols
-# --with hdf5		%_with_hdf5 path	require hdf5 support
-# --with hwloc		%_with_hwloc 1		require hwloc support
-# --with lua		%_with_lua path		build Slurm lua bindings
-# --with mysql		%_with_mysql 1		require mysql/mariadb support
-# --with numa		%_with_numa 1		require NUMA support
-# --without pam		%_without_pam 1		don't require pam-devel RPM to be installed
-# --without x11		%_without_x11 1		disable internal X11 support
-# --with ucx		%_with_ucx path		require ucx support
-# --with pmix		%_with_pmix path	require pmix support
-# --with nvml		%_with_nvml path	require nvml support
-
 #  Options that are off by default (enable with --with <opt>)
 %bcond_with cray
 %bcond_with cray_network
@@ -157,11 +137,6 @@ BuildRequires: ucx-devel
 #
 %define __os_install_post /usr/lib/rpm/brp-compress
 %define debug_package %{nil}
-
-#
-# Should unpackaged files in a build root terminate a build?
-# Uncomment if needed again.
-#%define _unpackaged_files_terminate_build      0
 
 # Slurm may intentionally include empty manifest files, which will
 # cause errors with rpm 4.13 and on. Turn that check off.
