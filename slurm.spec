@@ -6,7 +6,9 @@ Summary:	Slurm Workload Manager
 Group:		System Environment/Base
 License:	GPLv2+
 URL:		https://slurm.schedmd.com/
-Source0: https://github.com/SchedMD/slurm/releases/tag/%{name}-%{version}.tar.gz
+
+%global slurm_version  21_08_1_1
+Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
 
 %global slurm_source_dir %{name}-%{name}-21-08-1-1
 
