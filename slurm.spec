@@ -4,7 +4,7 @@ Name:		slurm
 %global slurm_patch 1
 %global slurm_prerelease 1
 
-Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}.%{?slurm_prerelease:.%{slurm_prerelease}}
+Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}%{?slurm_prerelease:.%{slurm_prerelease}}
 Release: 1%{?commit:.git%{shortcommit}}%{?dist}
 Summary:	Slurm Workload Manager
 
@@ -12,7 +12,7 @@ Group:		System Environment/Base
 License:	GPLv2+
 URL:		https://slurm.schedmd.com/
 
-%global slurm_version %{slurm_major}-%{slurm_minor}-%{slurm_patch}-%{?slurm_prerelease:-%{slurm_prerelease}}
+%global slurm_version %{slurm_major}-%{slurm_minor}-%{slurm_patch}%{?slurm_prerelease:-%{slurm_prerelease}}
 Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
 
 %global slurm_source_dir %{name}-%{name}-%{slurm_version}
