@@ -17,6 +17,7 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 
 %global slurm_source_dir %{name}-%{name}-%{slurm_version}
 
+
 #  Options that are off by default (enable with --with <opt>)
 %bcond_with cray
 %bcond_with cray_network
@@ -36,10 +37,10 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 %bcond_with pmix
 %bcond_with nvml
 
-# disable debug by default on all systems
+# Use debug by default on all systems
 %bcond_with debug
 
-# Options disabled by default
+# Options enabled by default
 %bcond_with pam
 %bcond_with x11
 
@@ -55,11 +56,20 @@ BuildRequires: systemd
 BuildRequires: munge-devel munge-libs
 BuildRequires: python3
 BuildRequires: readline-devel
+Obsoletes: slurm-lua slurm-munge slurm-plugins
 
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
 
+%define use_mysql_devel %(perl -e '`rpm -q mariadb-devel`; print $?;')
+
+%if %{with mysql}
+%if %{use_mysql_devel}
+BuildRequires: mysql-devel >= 5.0.0
+%else
 BuildRequires: mariadb-devel >= 5.0.0
+%endif
+%endif
 
 %if %{with cray}
 BuildRequires: cray-libalpscomm_cn-devel
@@ -73,7 +83,11 @@ BuildRequires: pkg-config
 %endif
 
 %if %{with cray_network}
+%if %{use_mysql_devel}
+BuildRequires: mysql-devel
+%else
 BuildRequires: mariadb-devel
+%endif
 BuildRequires: cray-libalpscomm_cn-devel
 BuildRequires: cray-libalpscomm_sn-devel
 BuildRequires: hwloc-devel
@@ -132,6 +146,11 @@ BuildRequires: ucx-devel
 #
 %define __os_install_post /usr/lib/rpm/brp-compress
 %define debug_package %{nil}
+
+#
+# Should unpackaged files in a build root terminate a build?
+# Uncomment if needed again.
+%define _unpackaged_files_terminate_build      0
 
 # Slurm may intentionally include empty manifest files, which will
 # cause errors with rpm 4.13 and on. Turn that check off.
@@ -203,6 +222,7 @@ Slurm compute node daemon. Used to launch jobs on compute nodes
 Summary: Slurm database daemon
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: slurm-sql
 %description slurmdbd
 Slurm database daemon. Used to accept and process database RPCs and upload
 database changes to slurmctld daemons on each cluster
@@ -234,6 +254,7 @@ OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
 Summary: Perl tool to print Slurm job state information
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: slurm-sjobexit slurm-sjstat slurm-seff
 %description contribs
 seff is a mail program used directly by the Slurm daemons. On completion of a
 job, wait for it's accounting information to be available and include that
@@ -252,6 +273,7 @@ Summary: PAM module for restricting access to compute nodes via Slurm
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
 BuildRequires: pam-devel
+Obsoletes: pam_slurm
 %description pam_slurm
 This module restricts access to compute nodes in a cluster where Slurm is in
 use.  Access is granted to root, any user with an Slurm-launched job currently
@@ -279,6 +301,7 @@ Provides a REST interface to Slurm.
 Summary: support daemons and software for the Cray SMW
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: craysmw
 %description slurmsmwd
 support daemons and software for the Cray SMW.  Includes slurmsmwd which
 notifies slurm about failed nodes.
@@ -288,7 +311,7 @@ notifies slurm about failed nodes.
 
 %prep
 # when the rel number is one, the tarball filename does not include it
-%setup -q -n %{slurm_source_dir}
+%setup -n %{slurm_source_dir}
 
 %build
 %configure \
@@ -444,6 +467,27 @@ Name: %{name}
 Version: %{version}
 EOF
 
+LIST=./pam.files
+touch $LIST
+%if %{?with_pam_dir}0
+    test -f %{buildroot}/%{with_pam_dir}/pam_slurm.so	&&
+	echo %{with_pam_dir}/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/%{with_pam_dir}/pam_slurm_adopt.so	&&
+	echo %{with_pam_dir}/pam_slurm_adopt.so	>>$LIST
+%else
+    test -f %{buildroot}/lib/security/pam_slurm.so	&&
+	echo /lib/security/pam_slurm.so		>>$LIST
+    test -f %{buildroot}/lib32/security/pam_slurm.so	&&
+	echo /lib32/security/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/lib64/security/pam_slurm.so	&&
+	echo /lib64/security/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/lib/security/pam_slurm_adopt.so		&&
+	echo /lib/security/pam_slurm_adopt.so		>>$LIST
+    test -f %{buildroot}/lib32/security/pam_slurm_adopt.so		&&
+	echo /lib32/security/pam_slurm_adopt.so		>>$LIST
+    test -f %{buildroot}/lib64/security/pam_slurm_adopt.so		&&
+	echo /lib64/security/pam_slurm_adopt.so		>>$LIST
+%endif
 #############################################################################
 
 %clean
@@ -594,6 +638,37 @@ rm -rf %{buildroot}
 %{_unitdir}/slurmsmwd.service
 %endif
 #############################################################################
+
+%pre
+
+%post
+/sbin/ldconfig
+
+%preun
+
+%postun
+/sbin/ldconfig
+
+%post slurmctld
+%systemd_post slurmctld.service
+%preun slurmctld
+%systemd_preun slurmctld.service
+%postun slurmctld
+%systemd_postun_with_restart slurmctld.service
+
+%post slurmd
+%systemd_post slurmd.service
+%preun slurmd
+%systemd_preun slurmd.service
+%postun slurmd
+%systemd_postun_with_restart slurmd.service
+
+%post slurmdbd
+%systemd_post slurmdbd.service
+%preun slurmdbd
+%systemd_preun slurmdbd.service
+%postun slurmdbd
+%systemd_postun_with_restart slurmdbd.service
 
 %changelog
 * Sat Sep 25 2021 Maureen Jean <maureen.jean@intel.com> - 21.08.1.1-1
