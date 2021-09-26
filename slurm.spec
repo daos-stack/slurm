@@ -37,10 +37,10 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 %bcond_with pmix
 %bcond_with nvml
 
-# Use debug by default on all systems
+# disable debug by default on all systems
 %bcond_with debug
 
-# Options enabled by default
+# Options disabled by default
 %bcond_with pam
 %bcond_with x11
 
@@ -56,7 +56,6 @@ BuildRequires: systemd
 BuildRequires: munge-devel munge-libs
 BuildRequires: python3
 BuildRequires: readline-devel
-Obsoletes: slurm-lua slurm-munge slurm-plugins
 
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
@@ -222,7 +221,6 @@ Slurm compute node daemon. Used to launch jobs on compute nodes
 Summary: Slurm database daemon
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: slurm-sql
 %description slurmdbd
 Slurm database daemon. Used to accept and process database RPCs and upload
 database changes to slurmctld daemons on each cluster
@@ -254,7 +252,6 @@ OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
 Summary: Perl tool to print Slurm job state information
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: slurm-sjobexit slurm-sjstat slurm-seff
 %description contribs
 seff is a mail program used directly by the Slurm daemons. On completion of a
 job, wait for it's accounting information to be available and include that
@@ -267,19 +264,6 @@ about jobs that are currently active on the machine. This output is built
 using the Slurm utilities, sinfo, squeue and scontrol, the man pages for these
 utilities will provide more information and greater depth of understanding.
 
-%if %{with pam}
-%package pam_slurm
-Summary: PAM module for restricting access to compute nodes via Slurm
-Group: System Environment/Base
-Requires: %{name}%{?_isa} = %{version}-%{release}
-BuildRequires: pam-devel
-Obsoletes: pam_slurm
-%description pam_slurm
-This module restricts access to compute nodes in a cluster where Slurm is in
-use.  Access is granted to root, any user with an Slurm-launched job currently
-running on the node, or any user who has allocated resources on the node
-according to the Slurm
-%endif
 
 %if %{with slurmrestd}
 %package slurmrestd
@@ -301,7 +285,6 @@ Provides a REST interface to Slurm.
 Summary: support daemons and software for the Cray SMW
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: craysmw
 %description slurmsmwd
 support daemons and software for the Cray SMW.  Includes slurmsmwd which
 notifies slurm about failed nodes.
@@ -316,7 +299,6 @@ notifies slurm about failed nodes.
 %build
 %configure \
 	%{?_without_debug:--disable-debug} \
-	%{?_with_pam_dir} \
 	%{?_with_cpusetdir} \
 	%{?_with_mysql_config} \
 	%{?_with_ssl} \
@@ -467,27 +449,6 @@ Name: %{name}
 Version: %{version}
 EOF
 
-LIST=./pam.files
-touch $LIST
-%if %{?with_pam_dir}0
-    test -f %{buildroot}/%{with_pam_dir}/pam_slurm.so	&&
-	echo %{with_pam_dir}/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/%{with_pam_dir}/pam_slurm_adopt.so	&&
-	echo %{with_pam_dir}/pam_slurm_adopt.so	>>$LIST
-%else
-    test -f %{buildroot}/lib/security/pam_slurm.so	&&
-	echo /lib/security/pam_slurm.so		>>$LIST
-    test -f %{buildroot}/lib32/security/pam_slurm.so	&&
-	echo /lib32/security/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/lib64/security/pam_slurm.so	&&
-	echo /lib64/security/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/lib/security/pam_slurm_adopt.so		&&
-	echo /lib/security/pam_slurm_adopt.so		>>$LIST
-    test -f %{buildroot}/lib32/security/pam_slurm_adopt.so		&&
-	echo /lib32/security/pam_slurm_adopt.so		>>$LIST
-    test -f %{buildroot}/lib64/security/pam_slurm_adopt.so		&&
-	echo /lib64/security/pam_slurm_adopt.so		>>$LIST
-%endif
 #############################################################################
 
 %clean
@@ -617,12 +578,6 @@ rm -rf %{buildroot}
 %{_bindir}/sjstat
 %{_bindir}/smail
 %{_mandir}/man1/sjstat*
-#############################################################################
-
-%if %{with pam}
-%files -f pam.files pam_slurm
-%defattr(-,root,root)
-%endif
 #############################################################################
 
 %if %{with slurmrestd}
