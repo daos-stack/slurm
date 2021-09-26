@@ -60,7 +60,11 @@ BuildRequires: readline-devel
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
 
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
+%else
 BuildRequires: mariadb-devel >= 5.0.0
+%endif
 
 %if %{with cray}
 BuildRequires: cray-libalpscomm_cn-devel
@@ -74,7 +78,11 @@ BuildRequires: pkg-config
 %endif
 
 %if %{with cray_network}
-BuildRequires: mariadb-devel
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
+%else
+BuildRequires: mariadb-devel >= 5.0.0
+%endif
 BuildRequires: cray-libalpscomm_cn-devel
 BuildRequires: cray-libalpscomm_sn-devel
 BuildRequires: hwloc-devel
