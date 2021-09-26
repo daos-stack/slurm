@@ -83,7 +83,6 @@ BuildRequires: glib2-devel
 BuildRequires: pkgconfig
 %endif
 
-BuildRequires: perl(ExtUtils::MakeMaker)
 
 %if %{with lua}
 BuildRequires: pkgconfig(lua) >= 5.1.0
@@ -143,31 +142,11 @@ BuildRequires: ucx-devel
 # cause errors with rpm 4.13 and on. Turn that check off.
 %define _empty_manifest_terminate_build 0
 
-# First we remove $prefix/local and then just prefix to make
-# sure we get the correct installdir
-%define _perlarch %(perl -e 'use Config; $T=$Config{installsitearch}; $P=$Config{installprefix}; $P1="$P/local"; $T =~ s/$P1//; $T =~ s/$P//; print $T;')
-
-%define _perlman3 %(perl -e 'use Config; $T=$Config{installsiteman3dir}; $P=$Config{siteprefix}; $P1="$P/local"; $T =~ s/$P1//; $T =~ s/$P//; print $T;')
-
-%define _perlarchlib %(perl -e 'use Config; $T=$Config{installarchlib}; $P=$Config{installprefix}; $P1="$P/local"; $T =~ s/$P1//; $T =~ s/$P//; print $T;')
-
-%define _perldir %{_prefix}%{_perlarch}
-%define _perlman3dir %{_prefix}%{_perlman3}
-%define _perlarchlibdir %{_prefix}%{_perlarchlib}
-
 %description
 Slurm is an open source, fault-tolerant, and highly scalable
 cluster management and job scheduling system for Linux clusters.
 Components include machine status, partition management,
 job management, scheduling and accounting modules
-
-%package perlapi
-Summary: Perl API to Slurm
-Group: Development/System
-Requires: %{name}%{?_isa} = %{version}-%{release}
-%description perlapi
-Perl API package for Slurm.  This package includes the perl API to provide a
-helpful interface to Slurm through Perl
 
 %package devel
 Summary: Development package for Slurm
@@ -221,62 +200,6 @@ Conflicts: pmix-libpmi
 %description libpmi
 Slurm\'s version of libpmi. For systems using Slurm, this version
 is preferred over the compatibility libraries shipped by the PMIx project.
-
-%package torque
-Summary: Torque/PBS wrappers for transition from Torque/PBS to Slurm
-Group: Development/System
-Requires: slurm-perlapi
-%description torque
-Torque wrapper scripts used for helping migrate from Torque/PBS to Slurm
-
-%package openlava
-Summary: openlava/LSF wrappers for transition from OpenLava/LSF to Slurm
-Group: Development/System
-Requires: slurm-perlapi
-%description openlava
-OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
-
-%package contribs
-Summary: Perl tool to print Slurm job state information
-Group: Development/System
-Requires: %{name}%{?_isa} = %{version}-%{release}
-%description contribs
-seff is a mail program used directly by the Slurm daemons. On completion of a
-job, wait for it's accounting information to be available and include that
-information in the email body.
-sjobexit is a slurm job exit code management tool. It enables users to alter
-job exit code information for completed jobs
-sjstat is a Perl tool to print Slurm job state information. The output is designed
-to give information on the resource usage and availablilty, as well as information
-about jobs that are currently active on the machine. This output is built
-using the Slurm utilities, sinfo, squeue and scontrol, the man pages for these
-utilities will provide more information and greater depth of understanding.
-
-
-%if %{with slurmrestd}
-%package slurmrestd
-Summary: Slurm REST API translator
-Group: System Environment/Base
-Requires: %{name}%{?_isa} = %{version}-%{release}
-BuildRequires: http-parser-devel
-%if %{defined suse_version}
-BuildRequires: libjson-c-devel
-%else
-BuildRequires: json-c-devel
-%endif
-%description slurmrestd
-Provides a REST interface to Slurm.
-%endif
-
-%if %{with slurmsmwd}
-%package slurmsmwd
-Summary: support daemons and software for the Cray SMW
-Group: System Environment/Base
-Requires: %{name}%{?_isa} = %{version}-%{release}
-%description slurmsmwd
-support daemons and software for the Cray SMW.  Includes slurmsmwd which
-notifies slurm about failed nodes.
-%endif
 
 #############################################################################
 
@@ -384,12 +307,6 @@ rm -f %{buildroot}/%{_sbindir}/slurm_epilog
 rm -f %{buildroot}/%{_sbindir}/slurm_prolog
 rm -f %{buildroot}/%{_sysconfdir}/init.d/slurm
 rm -f %{buildroot}/%{_sysconfdir}/init.d/slurmdbd
-rm -f %{buildroot}/%{_perldir}/auto/Slurm/.packlist
-rm -f %{buildroot}/%{_perldir}/auto/Slurm/Slurm.bs
-rm -f %{buildroot}/%{_perlarchlibdir}/perllocal.pod
-rm -f %{buildroot}/%{_perldir}/perllocal.pod
-rm -f %{buildroot}/%{_perldir}/auto/Slurmdb/.packlist
-rm -f %{buildroot}/%{_perldir}/auto/Slurmdb/Slurmdb.bs
 
 # Build man pages that are generated directly by the tools
 rm -f %{buildroot}/%{_mandir}/man1/sjobexitmod.1
@@ -489,19 +406,6 @@ rm -rf %{buildroot}
 %{_prefix}/include/slurm/*
 %dir %{_libdir}/pkgconfig
 %{_libdir}/pkgconfig/slurm.pc
-#############################################################################
-
-%files perlapi
-%defattr(-,root,root)
-%{_perldir}/Slurm.pm
-%{_perldir}/Slurm/Bitstr.pm
-%{_perldir}/Slurm/Constant.pm
-%{_perldir}/Slurm/Hostlist.pm
-%{_perldir}/auto/Slurm/Slurm.so
-%{_perldir}/Slurmdb.pm
-%{_perldir}/auto/Slurmdb/Slurmdb.so
-%{_perldir}/auto/Slurmdb/autosplit.ix
-%{_perlman3dir}/Slurm*
 
 #############################################################################
 
@@ -534,53 +438,6 @@ rm -rf %{buildroot}
 %endif
 #############################################################################
 
-%files torque
-%defattr(-,root,root)
-%{_bindir}/pbsnodes
-%{_bindir}/qalter
-%{_bindir}/qdel
-%{_bindir}/qhold
-%{_bindir}/qrerun
-%{_bindir}/qrls
-%{_bindir}/qstat
-%{_bindir}/qsub
-%{_bindir}/mpiexec
-%{_bindir}/generate_pbs_nodefile
-%{_libdir}/slurm/job_submit_pbs.so
-%{_libdir}/slurm/spank_pbs.so
-#############################################################################
-
-%files openlava
-%defattr(-,root,root)
-%{_bindir}/bjobs
-%{_bindir}/bkill
-%{_bindir}/bsub
-%{_bindir}/lsid
-
-#############################################################################
-
-%files contribs
-%defattr(-,root,root)
-%{_bindir}/seff
-%{_bindir}/sjobexitmod
-%{_bindir}/sjstat
-%{_bindir}/smail
-%{_mandir}/man1/sjstat*
-#############################################################################
-
-%if %{with slurmrestd}
-%files slurmrestd
-%{_sbindir}/slurmrestd
-%{_unitdir}/slurmrestd.service
-%endif
-#############################################################################
-
-%if %{with slurmsmwd}
-%files slurmsmwd
-%{_sbindir}/slurmsmwd
-%{_unitdir}/slurmsmwd.service
-%endif
-#############################################################################
 
 %pre
 
