@@ -294,7 +294,7 @@ notifies slurm about failed nodes.
 %setup -n %{slurm_source_dir}
 
 %build
-%configure --disable-rpath \
+%configure \
 	%{?_without_debug:--disable-debug} \
 	%{?_with_cpusetdir} \
 	%{?_with_mysql_config} \
@@ -318,7 +318,7 @@ make %{?_smp_mflags}
 
 # Ignore redundant standard rpaths and insecure relative rpaths,
 # for RHEL based distros which use "check-rpaths" tool.
-export QA_RPATHS=0x5
+# export QA_RPATHS=0x5
 
 # Strip out some dependencies
 
@@ -467,7 +467,7 @@ rm -rf %{buildroot}
 %exclude %{_libdir}/slurm/accounting_storage_mysql.so
 %exclude %{_libdir}/slurm/job_submit_pbs.so
 %exclude %{_libdir}/slurm/spank_pbs.so
-%{_mandir}
+%{_mandir}/*
 %exclude %{_mandir}/man1/sjobexit*
 %exclude %{_mandir}/man1/sjstat*
 %dir %{_libdir}/slurm/src
