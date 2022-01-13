@@ -254,11 +254,12 @@ job, wait for it's accounting information to be available and include that
 information in the email body.
 sjobexit is a slurm job exit code management tool. It enables users to alter
 job exit code information for completed jobs
-sjstat is a Perl tool to print Slurm job state information. The output is designed
-to give information on the resource usage and availablilty, as well as information
-about jobs that are currently active on the machine. This output is built
-using the Slurm utilities, sinfo, squeue and scontrol, the man pages for these
-utilities will provide more information and greater depth of understanding.
+sjstat is a Perl tool to print Slurm job state information. The output is
+designed to give information on the resource usage and availablilty, as
+well as information about jobs that are currently active on the machine.
+This output is built using the Slurm utilities, sinfo, squeue and scontrol,
+the man pages for these utilities will provide more information and greater
+depth of understanding.
 
 
 %if %{with slurmrestd}
@@ -293,7 +294,7 @@ notifies slurm about failed nodes.
 %setup -n %{slurm_source_dir}
 
 %build
-%configure \
+%configure --disable-rpath \
 	%{?_without_debug:--disable-debug} \
 	%{?_with_cpusetdir} \
 	%{?_with_mysql_config} \
@@ -372,10 +373,10 @@ install -D -m644 etc/slurmrestd.service  %{buildroot}/%{_unitdir}/slurmrestd.ser
 %endif
 
 install -D -m644 etc/cgroup.conf.example %{buildroot}/%{_sysconfdir}/cgroup.conf.example
-install -D -m644 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
+install -D -m755 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
 install -D -m644 etc/job_submit.lua.example %{buildroot}/%{_sysconfdir}/job_submit.lua.example
 install -D -m644 etc/slurm.conf.example %{buildroot}/%{_sysconfdir}/slurm.conf.example
-install -D -m600 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
+install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
 install -D -m644 etc/cli_filter.lua.example %{buildroot}/%{_sysconfdir}/cli_filter.lua.example
 install -D -m755 contribs/sjstat %{buildroot}/%{_bindir}/sjstat
 
@@ -500,7 +501,7 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files perlapi
-%defattr(-,root,root)
+%defattr(-,root,root,0755)
 %{_perldir}/Slurm.pm
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
