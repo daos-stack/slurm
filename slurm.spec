@@ -364,16 +364,13 @@ install -D -m644 etc/slurmrestd.service  %{buildroot}/%{_unitdir}/slurmrestd.ser
 %endif
 
 install -D -m644 etc/cgroup.conf.example %{buildroot}/%{_sysconfdir}/cgroup.conf.example
-install -D -m755 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
+install -D -m644 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
 install -D -m644 etc/job_submit.lua.example %{buildroot}/%{_sysconfdir}/job_submit.lua.example
 install -D -m644 etc/slurm.conf.example %{buildroot}/%{_sysconfdir}/slurm.conf.example
 install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
 install -D -m644 etc/cli_filter.lua.example %{buildroot}/%{_sysconfdir}/cli_filter.lua.example
 install -D -m755 contribs/sjstat %{buildroot}/%{_bindir}/sjstat
 
-# Change perms to fix rpmlint unstripped-binary-or-object
-chmod 0755 %{buildroot}/%{_libdir}/slurm/*.so*
-chmod 0755 %{buildroot}/%{_bindir}/s*
 # Delete unpackaged files:
 find %{buildroot} -name '*.a' -exec rm {} \;
 find %{buildroot} -name '*.la' -exec rm {} \;
@@ -447,7 +444,11 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files -f slurm.files
-%defattr(-,root,root,0755)
+%defattr(-,root,root)
+%attr(0755,root,root) %{_libdir}/slurm/*.so*
+%attr(0755,root,root) %{_bindir}/s*
+%attr(0755,root,root) %{_datadir}/doc
+%attr(0755,root,root) %{_mandir}/man*
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -457,11 +458,11 @@ rm -rf %{buildroot}
 %exclude %{_libdir}/libpmi*
 %{_libdir}/*.so*
 %{_libdir}/slurm/src/*
-%{_libdir}/slurm/*.so
+%{_libdir}/slurm/*.so*
 %exclude %{_libdir}/slurm/accounting_storage_mysql.so
 %exclude %{_libdir}/slurm/job_submit_pbs.so
 %exclude %{_libdir}/slurm/spank_pbs.so
-%{_mandir}/*
+%{_mandir}
 %exclude %{_mandir}/man1/sjobexit*
 %exclude %{_mandir}/man1/sjstat*
 %dir %{_libdir}/slurm/src
@@ -549,7 +550,9 @@ rm -rf %{buildroot}
 %{_bindir}/qsub
 %{_bindir}/mpiexec
 %{_bindir}/generate_pbs_nodefile
+%attr(0755,root,root) %{_libdir}/slurm/job_submit_pbs.so
 %{_libdir}/slurm/job_submit_pbs.so
+%attr(0755,root,root) %{_libdir}/slurm/spank_pbs.so
 %{_libdir}/slurm/spank_pbs.so
 #############################################################################
 
