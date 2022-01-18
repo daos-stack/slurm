@@ -125,14 +125,6 @@ BuildRequires: ucx-devel
 %{!?_slurm_sysconfdir: %global _slurm_sysconfdir /etc/slurm}
 %define _sysconfdir %_slurm_sysconfdir
 
-#  Allow override of datadir via _slurm_datadir.
-#%{!?_slurm_datadir: %global _slurm_datadir %{_prefix}/share}
-#%define _datadir %{_slurm_datadir}
-
-#  Allow override of mandir via _slurm_mandir.
-#%{!?_slurm_mandir: %global _slurm_mandir %{_datadir}/man}
-#%define _mandir %{_slurm_mandir}
-
 # Never allow rpm to strip binaries as this will break
 #  parallel debugging capability
 # Note that brp-compress does not compress man pages installed
