@@ -1,4 +1,4 @@
-Name:		slurm
+Name:   slurm
 %global slurm_major 21
 %global slurm_minor 08
 %global slurm_patch 5
@@ -6,11 +6,11 @@ Name:		slurm
 
 Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}%{?slurm_prerelease:.%{slurm_prerelease}}
 Release: 1%{?commit:.git%{shortcommit}}%{?dist}
-Summary:	Slurm Workload Manager
+Summary: Slurm Workload Manager
 
-Group:		System Environment/Base
-License:	GPLv2+
-URL:		https://slurm.schedmd.com/
+Group:   System Environment/Base
+License: GPLv2+
+URL:     https://slurm.schedmd.com/
 
 %global slurm_version %{slurm_major}-%{slurm_minor}-%{slurm_patch}%{?slurm_prerelease:-%{slurm_prerelease}}
 Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
@@ -371,6 +371,9 @@ install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.
 install -D -m644 etc/cli_filter.lua.example %{buildroot}/%{_sysconfdir}/cli_filter.lua.example
 install -D -m755 contribs/sjstat %{buildroot}/%{_bindir}/sjstat
 
+# Change perms to fix rpmlint unstripped-binary-or-object
+chmod 0755 %{buildroot}/%{_libdir}/slurm/*.so*
+chmod 0755 %{buildroot}/%{_bindir}/s*
 # Delete unpackaged files:
 find %{buildroot} -name '*.a' -exec rm {} \;
 find %{buildroot} -name '*.la' -exec rm {} \;
