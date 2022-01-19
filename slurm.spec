@@ -1,4 +1,4 @@
-Name:   slurm
+Name: slurm
 %global slurm_major 21
 %global slurm_minor 08
 %global slurm_patch 5
@@ -16,7 +16,6 @@ URL:     https://slurm.schedmd.com/
 Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
 
 %global slurm_source_dir %{name}-%{name}-%{slurm_version}
-
 
 #  Options that are off by default (enable with --with <opt>)
 %bcond_with cray
@@ -125,6 +124,15 @@ BuildRequires: ucx-devel
 %{!?_slurm_sysconfdir: %global _slurm_sysconfdir /etc/slurm}
 %define _sysconfdir %_slurm_sysconfdir
 
+#  Allow override of datadir via _slurm_datadir.
+%{!?_slurm_datadir: %global _slurm_datadir %{_prefix}/share}
+%define _datadir %{_slurm_datadir}
+
+#  Allow override of mandir via _slurm_mandir.
+%{!?_slurm_mandir: %global _slurm_mandir %{_datadir}/man}
+%define _mandir %{_slurm_mandir}
+
+#
 # Never allow rpm to strip binaries as this will break
 #  parallel debugging capability
 # Note that brp-compress does not compress man pages installed
@@ -364,7 +372,7 @@ install -D -m644 etc/slurmrestd.service  %{buildroot}/%{_unitdir}/slurmrestd.ser
 %endif
 
 install -D -m644 etc/cgroup.conf.example %{buildroot}/%{_sysconfdir}/cgroup.conf.example
-install -D -m644 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
+install -D -m755 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
 install -D -m644 etc/job_submit.lua.example %{buildroot}/%{_sysconfdir}/job_submit.lua.example
 install -D -m644 etc/slurm.conf.example %{buildroot}/%{_sysconfdir}/slurm.conf.example
 install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
@@ -444,11 +452,7 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files -f slurm.files
-%defattr(-,root,root)
-%attr(0755,root,root) %{_libdir}/slurm/*.so*
-%attr(0755,root,root) %{_bindir}/s*
-%attr(0755,root,root) %{_datadir}/doc
-%attr(0755,root,root) %{_mandir}/man*
+%defattr(0755,root,root,0755)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -462,7 +466,7 @@ rm -rf %{buildroot}
 %exclude %{_libdir}/slurm/accounting_storage_mysql.so
 %exclude %{_libdir}/slurm/job_submit_pbs.so
 %exclude %{_libdir}/slurm/spank_pbs.so
-%{_mandir}
+%{_mandir}/*
 %exclude %{_mandir}/man1/sjobexit*
 %exclude %{_mandir}/man1/sjstat*
 %dir %{_libdir}/slurm/src
@@ -550,9 +554,7 @@ rm -rf %{buildroot}
 %{_bindir}/qsub
 %{_bindir}/mpiexec
 %{_bindir}/generate_pbs_nodefile
-%attr(0755,root,root) %{_libdir}/slurm/job_submit_pbs.so
 %{_libdir}/slurm/job_submit_pbs.so
-%attr(0755,root,root) %{_libdir}/slurm/spank_pbs.so
 %{_libdir}/slurm/spank_pbs.so
 #############################################################################
 
@@ -621,4 +623,4 @@ rm -rf %{buildroot}
 
 %changelog
 * Tue Jan 18 2022 Maureen Jean <maureen.jean@intel.com> - 21.08.5.1-1
-- Initial release of slurm
+- Update slurm to 21.08.5.1
