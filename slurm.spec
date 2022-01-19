@@ -173,7 +173,7 @@ Summary: Perl API to Slurm
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
 %description perlapi
-Perl API package for Slurm.  This package includes the perl API to provide a
+Perl API package for Slurm.  This package includes the Perl API to provide a
 helpful interface to Slurm through Perl
 
 %package devel
@@ -452,7 +452,7 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files -f slurm.files
-%defattr(0755,root,root,0755)
+%defattr(-,root,root)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
