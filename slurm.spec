@@ -1,47 +1,30 @@
-Name:		slurm
-Version:	18.08.8
-%define rel	1
-Release:	%{rel}%{?dist}
-Summary:	Slurm Workload Manager
+Name: slurm
+%global slurm_major 21
+%global slurm_minor 08
+%global slurm_patch 5
+%global slurm_prerelease 1
 
-Group:		System Environment/Base
-License:	GPLv2+
-URL:		https://slurm.schedmd.com/
+Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}%{?slurm_prerelease:.%{slurm_prerelease}}
+Release: 1%{?commit:.git%{shortcommit}}%{?dist}
+Summary: Slurm Workload Manager
 
-# when the rel number is one, the directory name does not include it
-%if "%{rel}" == "1"
-%global slurm_source_dir %{name}-%{version}
-%else
-%global slurm_source_dir %{name}-%{version}-%{rel}
-%endif
+Group:   System Environment/Base
+License: GPLv2+
+URL:     https://slurm.schedmd.com/
 
-Source:		%{slurm_source_dir}.tar.bz2
-Patch0:   slurmconfgen_smw_py.patch
-Patch1:   testsuite_expect_driveregress_py.patch
-Patch2:   testsuite_expect_regression_py.patch
-Patch3:   doc_html_shtml2html_py.patch
-Patch4:   doc_man_man2html_py.patch
+%global slurm_version %{slurm_major}-%{slurm_minor}-%{slurm_patch}%{?slurm_prerelease:-%{slurm_prerelease}}
+Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
 
-# build options		.rpmmacros options	change to default action
-# ====================  ====================	========================
-# --prefix		%_prefix path		install path for commands, libraries, etc.
-# --with cray		%_with_cray 1		build for a Native-Slurm Cray system
-# --with cray_network	%_with_cray_network 1	build for a non-Cray system with a Cray network
-# --without debug	%_without_debug 1	don't compile with debugging symbols
-# --with hdf5		%_with_hdf5 path	require hdf5 support
-# --with hwloc		%_with_hwloc 1		require hwloc support
-# --with lua		%_with_lua path		build Slurm lua bindings
-# --with mysql		%_with_mysql 1		require mysql/mariadb support
-# --with numa		%_with_numa 1		require NUMA support
-# --with openssl	%_with_openssl 1	require openssl RPM to be installed
-#						ensures auth/openssl and crypto/openssl are built
-# --without pam		%_without_pam 1		don't require pam-devel RPM to be installed
-# --without x11		%_without_x11 1		disable internal X11 support
+%global slurm_source_dir %{name}-%{name}-%{slurm_version}
 
 #  Options that are off by default (enable with --with <opt>)
 %bcond_with cray
 %bcond_with cray_network
+%bcond_with cray_shasta
+%bcond_with slurmrestd
+%bcond_with slurmsmwd
 %bcond_with multiple_slurmd
+%bcond_with ucx
 
 # These options are only here to force there to be these on the build.
 # If they are not set they will still be compiled if the packages exist.
@@ -50,52 +33,36 @@ Patch4:   doc_man_man2html_py.patch
 %bcond_with hdf5
 %bcond_with lua
 %bcond_with numa
-%bcond_with x11
+%bcond_with pmix
+%bcond_with nvml
 
-# Build with OpenSSL by default on all platforms (disable using --without openssl)
-%bcond_without openssl
-
-# Use debug by default on all systems
+# enable debug by default on all systems
 %bcond_without debug
 
-# Build with PAM by default on linux
-%bcond_without pam
+# Options disabled by default
+%bcond_with pam
+%bcond_with x11
+
+# Disable hardened builds. -z,now or -z,relro breaks the plugin stack
+%undefine _hardened_build
+%global _hardened_cflags "-Wl,-z,lazy"
+%global _hardened_ldflags "-Wl,-z,lazy"
 
 Requires: munge
 
 %{?systemd_requires}
 BuildRequires: systemd
-%if (0%{?suse_version} >= 1220)
-BuildRequires: munge-devel
-%else
 BuildRequires: munge-devel munge-libs
-%endif
-%if 0%{?rhel} >= 8
-BuildRequires: python2
-%else
-BuildRequires: python
-%endif
+BuildRequires: python3
 BuildRequires: readline-devel
-Obsoletes: slurm-lua slurm-munge slurm-plugins
 
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
 
-%if %{with openssl}
-BuildRequires: openssl-devel >= 0.9.6 openssl >= 0.9.6
-%endif
-
-#%define use_mysql_devel %(perl -e '`rpm -q mariadb-devel`; print $?;')
-# CentOS 7+ uses mariadb, don't care about older
-# check fails on CentOS 8 mockbuild
-%define use_mysql_devel 0
-
-%if %{with mysql}
-%if %{use_mysql_devel}
-BuildRequires: mysql-devel >= 5.0.0
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
 %else
 BuildRequires: mariadb-devel >= 5.0.0
-%endif
 %endif
 
 %if %{with cray}
@@ -110,10 +77,10 @@ BuildRequires: pkg-config
 %endif
 
 %if %{with cray_network}
-%if %{use_mysql_devel}
-BuildRequires: mysql-devel
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
 %else
-BuildRequires: mariadb-devel
+BuildRequires: mariadb-devel >= 5.0.0
 %endif
 BuildRequires: cray-libalpscomm_cn-devel
 BuildRequires: cray-libalpscomm_sn-devel
@@ -139,6 +106,16 @@ BuildRequires: libnuma-devel
 %else
 BuildRequires: numactl-devel
 %endif
+%endif
+
+%if %{with pmix} && "%{_with_pmix}" == "--with-pmix"
+BuildRequires: pmix
+%global pmix_version %(rpm -q pmix --qf "%{RPMTAG_VERSION}")
+%endif
+
+%if %{with ucx} && "%{_with_ucx}" == "--with-ucx"
+BuildRequires: ucx-devel
+%global ucx_version %(rpm -q ucx-devel --qf "%{RPMTAG_VERSION}")
 %endif
 
 #  Allow override of sysconfdir via _slurm_sysconfdir.
@@ -167,7 +144,7 @@ BuildRequires: numactl-devel
 #
 # Should unpackaged files in a build root terminate a build?
 # Uncomment if needed again.
-#%define _unpackaged_files_terminate_build      0
+%define _unpackaged_files_terminate_build      0
 
 # Slurm may intentionally include empty manifest files, which will
 # cause errors with rpm 4.13 and on. Turn that check off.
@@ -196,7 +173,7 @@ Summary: Perl API to Slurm
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
 %description perlapi
-Perl API package for Slurm.  This package includes the perl API to provide a
+Perl API package for Slurm.  This package includes the Perl API to provide a
 helpful interface to Slurm through Perl
 
 %package devel
@@ -226,6 +203,12 @@ to launch jobs.
 Summary: Slurm compute node daemon
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
+%if %{with pmix} && "%{_with_pmix}" == "--with-pmix"
+Requires: pmix = %{pmix_version}
+%endif
+%if %{with ucx} && "%{_with_ucx}" == "--with-ucx"
+Requires: ucx = %{ucx_version}
+%endif
 %description slurmd
 Slurm compute node daemon. Used to launch jobs on compute nodes
 
@@ -233,7 +216,6 @@ Slurm compute node daemon. Used to launch jobs on compute nodes
 Summary: Slurm database daemon
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: slurm-sql
 %description slurmdbd
 Slurm database daemon. Used to accept and process database RPCs and upload
 database changes to slurmctld daemons on each cluster
@@ -265,41 +247,42 @@ OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
 Summary: Perl tool to print Slurm job state information
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: slurm-sjobexit slurm-sjstat slurm-seff
 %description contribs
 seff is a mail program used directly by the Slurm daemons. On completion of a
 job, wait for it's accounting information to be available and include that
 information in the email body.
 sjobexit is a slurm job exit code management tool. It enables users to alter
 job exit code information for completed jobs
-sjstat is a Perl tool to print Slurm job state information. The output is designed
-to give information on the resource usage and availablilty, as well as information
-about jobs that are currently active on the machine. This output is built
-using the Slurm utilities, sinfo, squeue and scontrol, the man pages for these
-utilities will provide more information and greater depth of understanding.
+sjstat is a Perl tool to print Slurm job state information. The output is
+designed to give information on the resource usage and availablilty, as
+well as information about jobs that are currently active on the machine.
+This output is built using the Slurm utilities, sinfo, squeue and scontrol,
+the man pages for these utilities will provide more information and greater
+depth of understanding.
 
-%if %{with pam}
-%package pam_slurm
-Summary: PAM module for restricting access to compute nodes via Slurm
+
+%if %{with slurmrestd}
+%package slurmrestd
+Summary: Slurm REST API translator
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
-BuildRequires: pam-devel
-Obsoletes: pam_slurm
-%description pam_slurm
-This module restricts access to compute nodes in a cluster where Slurm is in
-use.  Access is granted to root, any user with an Slurm-launched job currently
-running on the node, or any user who has allocated resources on the node
-according to the Slurm
+BuildRequires: http-parser-devel
+%if %{defined suse_version}
+BuildRequires: libjson-c-devel
+%else
+BuildRequires: json-c-devel
+%endif
+%description slurmrestd
+Provides a REST interface to Slurm.
 %endif
 
-%if %{with cray}
+%if %{with slurmsmwd}
 %package slurmsmwd
 Summary: support daemons and software for the Cray SMW
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: craysmw
 %description slurmsmwd
-support daeamons and software for the Cray SMW.  Includes slurmsmwd which
+support daemons and software for the Cray SMW.  Includes slurmsmwd which
 notifies slurm about failed nodes.
 %endif
 
@@ -307,30 +290,25 @@ notifies slurm about failed nodes.
 
 %prep
 # when the rel number is one, the tarball filename does not include it
-%setup -q -n %{slurm_source_dir}
-%if 0%{?rhel} >= 8
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%endif
+%setup -n %{slurm_source_dir}
 
 %build
 %configure \
 	%{?_without_debug:--disable-debug} \
-	%{?_with_pam_dir} \
 	%{?_with_cpusetdir} \
 	%{?_with_mysql_config} \
 	%{?_with_ssl} \
-	%{?_without_cray:--disable-native-cray}\
+	%{?_without_cray:--enable-really-no-cray}\
 	%{?_with_cray_network:--enable-cray-network}\
 	%{?_with_multiple_slurmd:--enable-multiple-slurmd} \
 	%{?_with_pmix} \
 	%{?_with_freeipmi} \
 	%{?_with_hdf5} \
 	%{?_with_shared_libslurm} \
+	%{!?_with_slurmrestd:--disable-slurmrestd} \
 	%{?_without_x11:--disable-x11} \
+	%{?_with_ucx} \
+	%{?_with_nvml} \
 	%{?_with_cflags}
 
 make %{?_smp_mflags}
@@ -344,7 +322,7 @@ export QA_RPATHS=0x5
 # Strip out some dependencies
 
 cat > find-requires.sh <<'EOF'
-exec %{__find_requires} "$@" | egrep -v '^libpmix.so|libevent'
+exec %{__find_requires} "$@" | egrep -v '^libpmix.so|libevent|libnvidia-ml'
 EOF
 chmod +x find-requires.sh
 %global _use_internal_dependency_generator 0
@@ -358,36 +336,47 @@ install -D -m644 etc/slurmctld.service %{buildroot}/%{_unitdir}/slurmctld.servic
 install -D -m644 etc/slurmd.service    %{buildroot}/%{_unitdir}/slurmd.service
 install -D -m644 etc/slurmdbd.service  %{buildroot}/%{_unitdir}/slurmdbd.service
 
+%if %{with slurmrestd}
+install -D -m644 etc/slurmrestd.service  %{buildroot}/%{_unitdir}/slurmrestd.service
+%endif
+
 # Do not package Slurm's version of libpmi on Cray systems in the usual location.
 # Cray's version of libpmi should be used. Move it elsewhere if the site still
 # wants to use it with other MPI stacks.
-%if %{with cray}
+%if %{with cray} || %{with cray_shasta}
    mkdir %{buildroot}/%{_libdir}/slurmpmi
    mv %{buildroot}/%{_libdir}/libpmi* %{buildroot}/%{_libdir}/slurmpmi
+%endif
+
+%if %{with cray}
    install -D -m644 contribs/cray/plugstack.conf.template %{buildroot}/%{_sysconfdir}/plugstack.conf.template
    install -D -m644 contribs/cray/slurm.conf.template %{buildroot}/%{_sysconfdir}/slurm.conf.template
    mkdir -p %{buildroot}/opt/modulefiles/slurm
    test -f contribs/cray/opt_modulefiles_slurm &&
       install -D -m644 contribs/cray/opt_modulefiles_slurm %{buildroot}/opt/modulefiles/slurm/%{version}-%{rel}
-   install -D -m644 contribs/cray/slurmsmwd/slurmsmwd.service %{buildroot}/%{_unitdir}/slurmsmwd.service
    echo -e '#%Module\nset ModulesVersion "%{version}-%{rel}"' > %{buildroot}/opt/modulefiles/slurm/.version
 %else
    rm -f contribs/cray/opt_modulefiles_slurm
-   rm -f contribs/cray/slurmsmwd/slurmsmwd.service
    rm -f %{buildroot}/%{_sysconfdir}/plugstack.conf.template
    rm -f %{buildroot}/%{_sysconfdir}/slurm.conf.template
    rm -f %{buildroot}/%{_sbindir}/capmc_suspend
    rm -f %{buildroot}/%{_sbindir}/capmc_resume
    rm -f %{buildroot}/%{_sbindir}/slurmconfgen.py
+%endif
+
+%if %{with slurmsmwd}
+   install -D -m644 contribs/cray/slurmsmwd/slurmsmwd.service %{buildroot}/%{_unitdir}/slurmsmwd.service
+%else
    rm -f %{buildroot}/%{_sbindir}/slurmsmwd
+   rm -f contribs/cray/slurmsmwd/slurmsmwd.service
 %endif
 
 install -D -m644 etc/cgroup.conf.example %{buildroot}/%{_sysconfdir}/cgroup.conf.example
-install -D -m644 etc/layouts.d.power.conf.example %{buildroot}/%{_sysconfdir}/layouts.d/power.conf.example
-install -D -m644 etc/layouts.d.power_cpufreq.conf.example %{buildroot}/%{_sysconfdir}/layouts.d/power_cpufreq.conf.example
-install -D -m644 etc/layouts.d.unit.conf.example %{buildroot}/%{_sysconfdir}/layouts.d/unit.conf.example
+install -D -m755 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
+install -D -m644 etc/job_submit.lua.example %{buildroot}/%{_sysconfdir}/job_submit.lua.example
 install -D -m644 etc/slurm.conf.example %{buildroot}/%{_sysconfdir}/slurm.conf.example
 install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
+install -D -m644 etc/cli_filter.lua.example %{buildroot}/%{_sysconfdir}/cli_filter.lua.example
 install -D -m755 contribs/sjstat %{buildroot}/%{_bindir}/sjstat
 
 # Delete unpackaged files:
@@ -397,15 +386,7 @@ rm -f %{buildroot}/%{_libdir}/slurm/job_submit_defaults.so
 rm -f %{buildroot}/%{_libdir}/slurm/job_submit_logging.so
 rm -f %{buildroot}/%{_libdir}/slurm/job_submit_partition.so
 rm -f %{buildroot}/%{_libdir}/slurm/auth_none.so
-rm -f %{buildroot}/%{_libdir}/slurm/launch_poe.so
-rm -f %{buildroot}/%{_libdir}/slurm/libpermapi.so
-rm -f %{buildroot}/%{_libdir}/slurm/libsched_if.so
-rm -f %{buildroot}/%{_libdir}/slurm/libsched_if64.so
-rm -f %{buildroot}/%{_libdir}/slurm/proctrack_sgi_job.so
-rm -f %{buildroot}/%{_libdir}/slurm/runjob_plugin.so
-rm -f %{buildroot}/%{_libdir}/slurm/select_bluegene.so
-rm -f %{buildroot}/%{_libdir}/slurm/switch_nrt.so
-rm -f %{buildroot}/%{_mandir}/man5/bluegene*
+rm -f %{buildroot}/%{_libdir}/slurm/cred_none.so
 rm -f %{buildroot}/%{_sbindir}/sfree
 rm -f %{buildroot}/%{_sbindir}/slurm_epilog
 rm -f %{buildroot}/%{_sbindir}/slurm_prolog
@@ -464,27 +445,6 @@ Name: %{name}
 Version: %{version}
 EOF
 
-LIST=./pam.files
-touch $LIST
-%if %{?with_pam_dir}0
-    test -f %{buildroot}/%{with_pam_dir}/pam_slurm.so	&&
-	echo %{with_pam_dir}/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/%{with_pam_dir}/pam_slurm_adopt.so	&&
-	echo %{with_pam_dir}/pam_slurm_adopt.so	>>$LIST
-%else
-    test -f %{buildroot}/lib/security/pam_slurm.so	&&
-	echo /lib/security/pam_slurm.so		>>$LIST
-    test -f %{buildroot}/lib32/security/pam_slurm.so	&&
-	echo /lib32/security/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/lib64/security/pam_slurm.so	&&
-	echo /lib64/security/pam_slurm.so	>>$LIST
-    test -f %{buildroot}/lib/security/pam_slurm_adopt.so		&&
-	echo /lib/security/pam_slurm_adopt.so		>>$LIST
-    test -f %{buildroot}/lib32/security/pam_slurm_adopt.so		&&
-	echo /lib32/security/pam_slurm_adopt.so		>>$LIST
-    test -f %{buildroot}/lib64/security/pam_slurm_adopt.so		&&
-	echo /lib64/security/pam_slurm_adopt.so		>>$LIST
-%endif
 #############################################################################
 
 %clean
@@ -492,7 +452,7 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files -f slurm.files
-%defattr(-,root,root,0755)
+%defattr(-,root,root)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -502,11 +462,11 @@ rm -rf %{buildroot}
 %exclude %{_libdir}/libpmi*
 %{_libdir}/*.so*
 %{_libdir}/slurm/src/*
-%{_libdir}/slurm/*.so
+%{_libdir}/slurm/*.so*
 %exclude %{_libdir}/slurm/accounting_storage_mysql.so
 %exclude %{_libdir}/slurm/job_submit_pbs.so
 %exclude %{_libdir}/slurm/spank_pbs.so
-%{_mandir}
+%{_mandir}/*
 %exclude %{_mandir}/man1/sjobexit*
 %exclude %{_mandir}/man1/sjstat*
 %dir %{_libdir}/slurm/src
@@ -523,11 +483,11 @@ rm -rf %{buildroot}
 %config %{_sysconfdir}/slurm.conf.template
 %endif
 %config %{_sysconfdir}/cgroup.conf.example
-%config %{_sysconfdir}/layouts.d/power.conf.example
-%config %{_sysconfdir}/layouts.d/power_cpufreq.conf.example
-%config %{_sysconfdir}/layouts.d/unit.conf.example
+%config %{_sysconfdir}/job_submit.lua.example
+%config %{_sysconfdir}/prolog.example
 %config %{_sysconfdir}/slurm.conf.example
 %config %{_sysconfdir}/slurmdbd.conf.example
+%config %{_sysconfdir}/cli_filter.lua.example
 #############################################################################
 
 %files devel
@@ -540,12 +500,11 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files perlapi
-%defattr(-,root,root)
+%defattr(-,root,root,0755)
 %{_perldir}/Slurm.pm
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
 %{_perldir}/Slurm/Hostlist.pm
-%{_perldir}/Slurm/Stepctx.pm
 %{_perldir}/auto/Slurm/Slurm.so
 %{_perldir}/Slurmdb.pm
 %{_perldir}/auto/Slurmdb/Slurmdb.so
@@ -576,7 +535,7 @@ rm -rf %{buildroot}
 
 %files libpmi
 %defattr(-,root,root)
-%if %{with cray}
+%if %{with cray} || %{with cray_shasta}
 %{_libdir}/slurmpmi/*
 %else
 %{_libdir}/libpmi*
@@ -617,13 +576,14 @@ rm -rf %{buildroot}
 %{_mandir}/man1/sjstat*
 #############################################################################
 
-%if %{with pam}
-%files -f pam.files pam_slurm
-%defattr(-,root,root)
+%if %{with slurmrestd}
+%files slurmrestd
+%{_sbindir}/slurmrestd
+%{_unitdir}/slurmrestd.service
 %endif
 #############################################################################
 
-%if %{with cray}
+%if %{with slurmsmwd}
 %files slurmsmwd
 %{_sbindir}/slurmsmwd
 %{_unitdir}/slurmsmwd.service
@@ -660,3 +620,7 @@ rm -rf %{buildroot}
 %systemd_preun slurmdbd.service
 %postun slurmdbd
 %systemd_postun_with_restart slurmdbd.service
+
+%changelog
+* Tue Jan 18 2022 Maureen Jean <maureen.jean@intel.com> - 21.08.5.1-1
+- Update slurm to 21.08.5.1
