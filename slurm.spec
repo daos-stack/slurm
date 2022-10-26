@@ -1,6 +1,6 @@
 Name: slurm
-%global slurm_major 21
-%global slurm_minor 08
+%global slurm_major 22
+%global slurm_minor 05
 %global slurm_patch 5
 %global slurm_prerelease 1
 
@@ -622,5 +622,7 @@ rm -rf %{buildroot}
 %systemd_postun_with_restart slurmdbd.service
 
 %changelog
+* Wed Oct 26 2022 Maureen Jean <maureen.jean@intel.com> - 22.05.5.1-1
+- Update slurm to 22.05.5.1
 * Tue Jan 18 2022 Maureen Jean <maureen.jean@intel.com> - 21.08.5.1-1
 - Update slurm to 21.08.5.1
