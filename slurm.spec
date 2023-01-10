@@ -88,14 +88,10 @@ Obsoletes: slurm-plugins <= %{version}
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
 
-%define use_mysql_devel %(perl -e '`rpm -q mariadb-devel`; print $?;')
-
-%if %{with mysql}
-%if %{use_mysql_devel}
-BuildRequires: mysql-devel >= 5.0.0
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
 %else
 BuildRequires: mariadb-devel >= 5.0.0
-%endif
 %endif
 
 %if %{with cray}
@@ -110,8 +106,8 @@ BuildRequires: pkg-config
 %endif
 
 %if %{with cray_network}
-%if %{use_mysql_devel}
-BuildRequires: mysql-devel
+%if (0%{?suse_version} >= 1500)
+BuildRequires: libmariadb-devel
 %else
 BuildRequires: mariadb-devel
 %endif
