@@ -1,7 +1,7 @@
 Name:		slurm
-%global slurm_major 21
-%global slurm_minor 08
-%global slurm_patch 5
+%global slurm_major 22
+%global slurm_minor 05
+%global slurm_patch 7
 %global slurm_prerelease 1
 
 Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}%{?slurm_prerelease:.%{slurm_prerelease}}
