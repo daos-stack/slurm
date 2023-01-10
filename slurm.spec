@@ -16,7 +16,8 @@ URL:		https://slurm.schedmd.com/
 
 %global slurm_source_dir %{name}-%{name}-%{slurm_version}
 
-Source0:	%{slurm_source_dir}.tar.gz
+Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
+
 
 # build options		.rpmmacros options	change to default action
 # ====================  ====================	========================
@@ -694,4 +695,8 @@ rm -rf %{buildroot}
 %systemd_preun slurmdbd.service
 %postun slurmdbd
 %systemd_postun_with_restart slurmdbd.service
+
+%changelog
+* Tue Jan 10 2023 Maureen Jean <maureen.jean@intel.com> - 22.05.7.1-1
+- Update slurm to 22.05.7.1
 
