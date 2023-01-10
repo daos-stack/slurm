@@ -515,11 +515,6 @@ touch $LIST
     test -f %{buildroot}/lib64/security/pam_slurm_adopt.so		&&
 	echo /lib64/security/pam_slurm_adopt.so		>>$LIST
 %endif
-#############################################################################
-
-%clean
-rm -rf %{buildroot}
-#############################################################################
 
 %files -f slurm.files
 %defattr(-,root,root,0755)
