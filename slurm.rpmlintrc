@@ -1,3 +1,4 @@
 addFilter('standard-dir-owned-by-package')
 addFilter('binary-or-shlib-defines-rpath')
-addFilter('static-library-without-debuginfo')
+addFilter('missing-call-to-setgroups-before-setuid')
+addFilter('script-without-shebang')
