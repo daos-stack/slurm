@@ -284,15 +284,7 @@ Obsoletes: slurm-sjstat <= %{version}
 Obsoletes: slurm-seff <= %{version}
 BuildArch: noarch
 %description contribs
-seff is a mail program used directly by the Slurm daemons. On completion of a
-job, wait for it's accounting information to be available and include that
-information in the email body.
-sjobexit is a slurm job exit code management tool. It enables users to alter
-job exit code information for completed jobs
-sjstat is a Perl tool to print Slurm job state information. The output is designed
-to give information on the resource usage and availablilty, as well as information
-about jobs that are currently active on the machine. This output is built
-using the Slurm utilities, sinfo, squeue and scontrol, the man pages for these
+Contains seff sjobexit sjstat. The man pages for these
 utilities will provide more information and greater depth of understanding.
 
 %if %{with pam}
@@ -516,7 +508,6 @@ touch $LIST
 %endif
 
 %files -f slurm.files
-%defattr(-,root,root,0755)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -540,18 +531,17 @@ touch $LIST
 #############################################################################
 
 %files -f example.configs example-configs
-%defattr(-,root,root,0755)
 %dir %{_sysconfdir}
 %if %{with cray}
 %config %{_sysconfdir}/plugstack.conf.template
 %config %{_sysconfdir}/slurm.conf.template
 %endif
-%config %attr(0755,root,root) %{_sysconfdir}/cgroup.conf.example
-%config %attr(0755,root,root) %{_sysconfdir}/job_submit.lua.example
-%config %attr(0755,root,root) %{_sysconfdir}/prolog.example
-%config %attr(0755,root,root) %{_sysconfdir}/slurm.conf.example
-%config %attr(0755,root,root) %{_sysconfdir}/slurmdbd.conf.example
-%config %attr(0755,root,root) %{_sysconfdir}/cli_filter.lua.example
+%{_sysconfdir}/cgroup.conf.example
+%{_sysconfdir}/job_submit.lua.example
+%{_sysconfdir}/prolog.example
+%{_sysconfdir}/slurm.conf.example
+%{_sysconfdir}/slurmdbd.conf.example
+%{_sysconfdir}/cli_filter.lua.example
 #############################################################################
 
 %files devel
@@ -563,14 +553,13 @@ touch $LIST
 #############################################################################
 
 %files perlapi
-%defattr(-,root,root)
 %{_perldir}/Slurm.pm
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
 %{_perldir}/Slurm/Hostlist.pm
-%attr(0755,root,root) %{_perldir}/auto/Slurm/Slurm.so
+%{_perldir}/auto/Slurm/Slurm.so
 %{_perldir}/Slurmdb.pm
-%attr(0755,root,root) %{_perldir}/auto/Slurmdb/Slurmdb.so
+%{_perldir}/auto/Slurmdb/Slurmdb.so
 %{_perldir}/auto/Slurmdb/autosplit.ix
 %{_perlman3dir}/Slurm*
 
