@@ -508,6 +508,8 @@ touch $LIST
 %endif
 
 %files -f slurm.files
+%defattr(-,root,root)
+%dir %attr(0755,root,root)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -531,17 +533,18 @@ touch $LIST
 #############################################################################
 
 %files -f example.configs example-configs
+%defattr(-,root,root)
 %dir %{_sysconfdir}
 %if %{with cray}
 %config %{_sysconfdir}/plugstack.conf.template
 %config %{_sysconfdir}/slurm.conf.template
 %endif
-%{_sysconfdir}/cgroup.conf.example
-%{_sysconfdir}/job_submit.lua.example
-%{_sysconfdir}/prolog.example
-%{_sysconfdir}/slurm.conf.example
-%{_sysconfdir}/slurmdbd.conf.example
-%{_sysconfdir}/cli_filter.lua.example
+%attr(0755,root,root) %{_sysconfdir}/cgroup.conf.example
+%attr(0755,root,root) %{_sysconfdir}/job_submit.lua.example
+%attr(0755,root,root) %{_sysconfdir}/prolog.example
+%attr(0755,root,root) %{_sysconfdir}/slurm.conf.example
+%attr(0755,root,root) %{_sysconfdir}/slurmdbd.conf.example
+%attr(0755,root,root) %{_sysconfdir}/cli_filter.lua.example
 #############################################################################
 
 %files devel
@@ -557,9 +560,9 @@ touch $LIST
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
 %{_perldir}/Slurm/Hostlist.pm
-%{_perldir}/auto/Slurm/Slurm.so
+%attr(0755,root,root) %{_perldir}/auto/Slurm/Slurm.so
 %{_perldir}/Slurmdb.pm
-%{_perldir}/auto/Slurmdb/Slurmdb.so
+%attr(0755,root,root) %{_perldir}/auto/Slurmdb/Slurmdb.so
 %{_perldir}/auto/Slurmdb/autosplit.ix
 %{_perlman3dir}/Slurm*
 
