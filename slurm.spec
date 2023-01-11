@@ -62,9 +62,9 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 # Use debug by default on all systems
 %bcond_without debug
 
-# Options enabled by default
-%bcond_without pam
-%bcond_without x11
+# Options disabled by default
+%bcond_with pam
+%bcond_with x11
 
 # Disable hardened builds. -z,now or -z,relro breaks the plugin stack
 %undefine _hardened_build
@@ -216,6 +216,7 @@ and static libraries for the Slurm API
 %package example-configs
 Summary: Example config files for Slurm
 Group: Development/System
+BuildArch: noarch
 %description example-configs
 Example configuration files for Slurm.
 
@@ -269,6 +270,7 @@ Torque wrapper scripts used for helping migrate from Torque/PBS to Slurm
 %package openlava
 Summary: openlava/LSF wrappers for transition from OpenLava/LSF to Slurm
 Group: Development/System
+BuildArch: noarch
 Requires: slurm-perlapi
 %description openlava
 OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
@@ -280,6 +282,7 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 Obsoletes: slurm-sjobexit <= %{version}
 Obsoletes: slurm-sjstat <= %{version}
 Obsoletes: slurm-seff <= %{version}
+BuildArch: noarch
 %description contribs
 seff is a mail program used directly by the Slurm daemons. On completion of a
 job, wait for it's accounting information to be available and include that
@@ -543,12 +546,12 @@ touch $LIST
 %config %{_sysconfdir}/plugstack.conf.template
 %config %{_sysconfdir}/slurm.conf.template
 %endif
-%config %{_sysconfdir}/cgroup.conf.example
-%config %{_sysconfdir}/job_submit.lua.example
-%config %{_sysconfdir}/prolog.example
-%config %{_sysconfdir}/slurm.conf.example
-%config %{_sysconfdir}/slurmdbd.conf.example
-%config %{_sysconfdir}/cli_filter.lua.example
+%config %attr(0755,root,root) %{_sysconfdir}/cgroup.conf.example
+%config %attr(0755,root,root) %{_sysconfdir}/job_submit.lua.example
+%config %attr(0755,root,root) %{_sysconfdir}/prolog.example
+%config %attr(0755,root,root) %{_sysconfdir}/slurm.conf.example
+%config %attr(0755,root,root) %{_sysconfdir}/slurmdbd.conf.example
+%config %attr(0755,root,root) %{_sysconfdir}/cli_filter.lua.example
 #############################################################################
 
 %files devel
@@ -565,9 +568,9 @@ touch $LIST
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
 %{_perldir}/Slurm/Hostlist.pm
-%{_perldir}/auto/Slurm/Slurm.so
+%attr(0755,root,root) %{_perldir}/auto/Slurm/Slurm.so
 %{_perldir}/Slurmdb.pm
-%{_perldir}/auto/Slurmdb/Slurmdb.so
+%attr(0755,root,root) %{_perldir}/auto/Slurmdb/Slurmdb.so
 %{_perldir}/auto/Slurmdb/autosplit.ix
 %{_perlman3dir}/Slurm*
 
