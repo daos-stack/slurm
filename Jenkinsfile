@@ -39,6 +39,7 @@
 // To use a test branch (i.e. PR) until it lands to master
 // I.e. for testing library changes
 //@Library(value="pipeline-lib@your_branch") _
+@Library(value="pipeline-lib@PR-360") _
 
 packageBuildingPipelineDAOSTest(['distros' : ['el8', 'leap15'],
                                  'test-tag': 'soak_smoke'])
