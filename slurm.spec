@@ -1,21 +1,44 @@
-Name: slurm
-%global slurm_major 21
-%global slurm_minor 08
-%global slurm_patch 5
+Name:		slurm
+%global slurm_major 22
+%global slurm_minor 05
+%global slurm_patch 7
 %global slurm_prerelease 1
 
 Version: %{slurm_major}.%{slurm_minor}.%{slurm_patch}%{?slurm_prerelease:.%{slurm_prerelease}}
 Release: 1%{?commit:.git%{shortcommit}}%{?dist}
-Summary: Slurm Workload Manager
+Summary:	Slurm Workload Manager
 
-Group:   System Environment/Base
-License: GPLv2+
-URL:     https://slurm.schedmd.com/
+Group:		System Environment/Base
+License:	GPLv2+
+URL:		https://slurm.schedmd.com/
 
 %global slurm_version %{slurm_major}-%{slurm_minor}-%{slurm_patch}%{?slurm_prerelease:-%{slurm_prerelease}}
-Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
 
 %global slurm_source_dir %{name}-%{name}-%{slurm_version}
+
+Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_version}.tar.gz
+
+
+# build options		.rpmmacros options	change to default action
+# ====================  ====================	========================
+# --prefix		%_prefix path		install path for commands, libraries, etc.
+# --with cray		%_with_cray 1		build for a Cray Aries system
+# --with cray_network	%_with_cray_network 1	build for a non-Cray system with a Cray network
+# --with cray_shasta	%_with_cray_shasta 1	build for a Cray Shasta system
+# --with slurmrestd	%_with_slurmrestd 1	build slurmrestd
+# --with slurmsmwd      %_with_slurmsmwd 1      build slurmsmwd
+# --without debug	%_without_debug 1	don't compile with debugging symbols
+# --with hdf5		%_with_hdf5 path	require hdf5 support
+# --with hwloc		%_with_hwloc 1		require hwloc support
+# --with lua		%_with_lua path		build Slurm lua bindings
+# --with mysql		%_with_mysql 1		require mysql/mariadb support
+# --with numa		%_with_numa 1		require NUMA support
+# --without pam		%_without_pam 1		don't require pam-devel RPM to be installed
+# --without x11		%_without_x11 1		disable internal X11 support
+# --with ucx		%_with_ucx path		require ucx support
+# --with pmix		%_with_pmix path	require pmix support
+# --with nvml		%_with_nvml path	require nvml support
+#
 
 #  Options that are off by default (enable with --with <opt>)
 %bcond_with cray
@@ -36,7 +59,7 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 %bcond_with pmix
 %bcond_with nvml
 
-# enable debug by default on all systems
+# Use debug by default on all systems
 %bcond_without debug
 
 # Options disabled by default
@@ -48,6 +71,9 @@ Source0: https://github.com/SchedMD/slurm/archive/refs/tags/%{name}-%{slurm_vers
 %global _hardened_cflags "-Wl,-z,lazy"
 %global _hardened_ldflags "-Wl,-z,lazy"
 
+# Disable Link Time Optimization (LTO)
+%define _lto_cflags %{nil}
+
 Requires: munge
 
 %{?systemd_requires}
@@ -55,6 +81,9 @@ BuildRequires: systemd
 BuildRequires: munge-devel munge-libs
 BuildRequires: python3
 BuildRequires: readline-devel
+Obsoletes: slurm-lua <= %{version}
+Obsoletes: slurm-munge <= %{version}
+Obsoletes: slurm-plugins <= %{version}
 
 # fake systemd support when building rpms on other platforms
 %{!?_unitdir: %global _unitdir /lib/systemd/systemd}
@@ -80,7 +109,7 @@ BuildRequires: pkg-config
 %if (0%{?suse_version} >= 1500)
 BuildRequires: libmariadb-devel
 %else
-BuildRequires: mariadb-devel >= 5.0.0
+BuildRequires: mariadb-devel
 %endif
 BuildRequires: cray-libalpscomm_cn-devel
 BuildRequires: cray-libalpscomm_sn-devel
@@ -144,7 +173,7 @@ BuildRequires: ucx-devel
 #
 # Should unpackaged files in a build root terminate a build?
 # Uncomment if needed again.
-%define _unpackaged_files_terminate_build      0
+#%define _unpackaged_files_terminate_build      0
 
 # Slurm may intentionally include empty manifest files, which will
 # cause errors with rpm 4.13 and on. Turn that check off.
@@ -173,7 +202,7 @@ Summary: Perl API to Slurm
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
 %description perlapi
-Perl API package for Slurm.  This package includes the Perl API to provide a
+Perl API package for Slurm.  This package includes the perl API to provide a
 helpful interface to Slurm through Perl
 
 %package devel
@@ -187,6 +216,7 @@ and static libraries for the Slurm API
 %package example-configs
 Summary: Example config files for Slurm
 Group: Development/System
+BuildArch: noarch
 %description example-configs
 Example configuration files for Slurm.
 
@@ -216,6 +246,7 @@ Slurm compute node daemon. Used to launch jobs on compute nodes
 Summary: Slurm database daemon
 Group: System Environment/Base
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: slurm-sql <= %{version}
 %description slurmdbd
 Slurm database daemon. Used to accept and process database RPCs and upload
 database changes to slurmctld daemons on each cluster
@@ -239,6 +270,7 @@ Torque wrapper scripts used for helping migrate from Torque/PBS to Slurm
 %package openlava
 Summary: openlava/LSF wrappers for transition from OpenLava/LSF to Slurm
 Group: Development/System
+BuildArch: noarch
 Requires: slurm-perlapi
 %description openlava
 OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
@@ -247,19 +279,27 @@ OpenLava wrapper scripts used for helping migrate from OpenLava/LSF to Slurm
 Summary: Perl tool to print Slurm job state information
 Group: Development/System
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: slurm-sjobexit <= %{version}
+Obsoletes: slurm-sjstat <= %{version}
+Obsoletes: slurm-seff <= %{version}
+BuildArch: noarch
 %description contribs
-seff is a mail program used directly by the Slurm daemons. On completion of a
-job, wait for it's accounting information to be available and include that
-information in the email body.
-sjobexit is a slurm job exit code management tool. It enables users to alter
-job exit code information for completed jobs
-sjstat is a Perl tool to print Slurm job state information. The output is
-designed to give information on the resource usage and availablilty, as
-well as information about jobs that are currently active on the machine.
-This output is built using the Slurm utilities, sinfo, squeue and scontrol,
-the man pages for these utilities will provide more information and greater
-depth of understanding.
+Contains seff sjobexit sjstat. The man pages for these
+utilities will provide more information and greater depth of understanding.
 
+%if %{with pam}
+%package pam_slurm
+Summary: PAM module for restricting access to compute nodes via Slurm
+Group: System Environment/Base
+Requires: %{name}%{?_isa} = %{version}-%{release}
+BuildRequires: pam-devel
+Obsoletes: pam_slurm <= %{version}
+%description pam_slurm
+This module restricts access to compute nodes in a cluster where Slurm is in
+use.  Access is granted to root, any user with an Slurm-launched job currently
+running on the node, or any user who has allocated resources on the node
+according to the Slurm
+%endif
 
 %if %{with slurmrestd}
 %package slurmrestd
@@ -295,9 +335,9 @@ notifies slurm about failed nodes.
 %build
 %configure \
 	%{?_without_debug:--disable-debug} \
+	%{?_with_pam_dir} \
 	%{?_with_cpusetdir} \
 	%{?_with_mysql_config} \
-	%{?_with_ssl} \
 	%{?_without_cray:--enable-really-no-cray}\
 	%{?_with_cray_network:--enable-cray-network}\
 	%{?_with_multiple_slurmd:--enable-multiple-slurmd} \
@@ -372,10 +412,10 @@ install -D -m644 etc/slurmrestd.service  %{buildroot}/%{_unitdir}/slurmrestd.ser
 %endif
 
 install -D -m644 etc/cgroup.conf.example %{buildroot}/%{_sysconfdir}/cgroup.conf.example
-install -D -m755 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
+install -D -m644 etc/prolog.example %{buildroot}/%{_sysconfdir}/prolog.example
 install -D -m644 etc/job_submit.lua.example %{buildroot}/%{_sysconfdir}/job_submit.lua.example
 install -D -m644 etc/slurm.conf.example %{buildroot}/%{_sysconfdir}/slurm.conf.example
-install -D -m644 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
+install -D -m600 etc/slurmdbd.conf.example %{buildroot}/%{_sysconfdir}/slurmdbd.conf.example
 install -D -m644 etc/cli_filter.lua.example %{buildroot}/%{_sysconfdir}/cli_filter.lua.example
 install -D -m755 contribs/sjstat %{buildroot}/%{_bindir}/sjstat
 
@@ -445,14 +485,31 @@ Name: %{name}
 Version: %{version}
 EOF
 
-#############################################################################
-
-%clean
-rm -rf %{buildroot}
-#############################################################################
+LIST=./pam.files
+touch $LIST
+%if %{?with_pam_dir}0
+    test -f %{buildroot}/%{with_pam_dir}/pam_slurm.so	&&
+	echo %{with_pam_dir}/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/%{with_pam_dir}/pam_slurm_adopt.so	&&
+	echo %{with_pam_dir}/pam_slurm_adopt.so	>>$LIST
+%else
+    test -f %{buildroot}/lib/security/pam_slurm.so	&&
+	echo /lib/security/pam_slurm.so		>>$LIST
+    test -f %{buildroot}/lib32/security/pam_slurm.so	&&
+	echo /lib32/security/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/lib64/security/pam_slurm.so	&&
+	echo /lib64/security/pam_slurm.so	>>$LIST
+    test -f %{buildroot}/lib/security/pam_slurm_adopt.so		&&
+	echo /lib/security/pam_slurm_adopt.so		>>$LIST
+    test -f %{buildroot}/lib32/security/pam_slurm_adopt.so		&&
+	echo /lib32/security/pam_slurm_adopt.so		>>$LIST
+    test -f %{buildroot}/lib64/security/pam_slurm_adopt.so		&&
+	echo /lib64/security/pam_slurm_adopt.so		>>$LIST
+%endif
 
 %files -f slurm.files
 %defattr(-,root,root)
+%dir %attr(0755,root,root)
 %{_datadir}/doc
 %{_bindir}/s*
 %exclude %{_bindir}/seff
@@ -462,11 +519,11 @@ rm -rf %{buildroot}
 %exclude %{_libdir}/libpmi*
 %{_libdir}/*.so*
 %{_libdir}/slurm/src/*
-%{_libdir}/slurm/*.so*
+%{_libdir}/slurm/*.so
 %exclude %{_libdir}/slurm/accounting_storage_mysql.so
 %exclude %{_libdir}/slurm/job_submit_pbs.so
 %exclude %{_libdir}/slurm/spank_pbs.so
-%{_mandir}/*
+%{_mandir}
 %exclude %{_mandir}/man1/sjobexit*
 %exclude %{_mandir}/man1/sjstat*
 %dir %{_libdir}/slurm/src
@@ -476,18 +533,18 @@ rm -rf %{buildroot}
 #############################################################################
 
 %files -f example.configs example-configs
-%defattr(-,root,root,0755)
+%defattr(-,root,root)
 %dir %{_sysconfdir}
 %if %{with cray}
 %config %{_sysconfdir}/plugstack.conf.template
 %config %{_sysconfdir}/slurm.conf.template
 %endif
-%config %{_sysconfdir}/cgroup.conf.example
-%config %{_sysconfdir}/job_submit.lua.example
-%config %{_sysconfdir}/prolog.example
-%config %{_sysconfdir}/slurm.conf.example
-%config %{_sysconfdir}/slurmdbd.conf.example
-%config %{_sysconfdir}/cli_filter.lua.example
+%attr(0755,root,root) %{_sysconfdir}/cgroup.conf.example
+%attr(0755,root,root) %{_sysconfdir}/job_submit.lua.example
+%attr(0755,root,root) %{_sysconfdir}/prolog.example
+%attr(0755,root,root) %{_sysconfdir}/slurm.conf.example
+%attr(0755,root,root) %{_sysconfdir}/slurmdbd.conf.example
+%attr(0755,root,root) %{_sysconfdir}/cli_filter.lua.example
 #############################################################################
 
 %files devel
@@ -495,19 +552,17 @@ rm -rf %{buildroot}
 %dir %attr(0755,root,root)
 %dir %{_prefix}/include/slurm
 %{_prefix}/include/slurm/*
-%dir %{_libdir}/pkgconfig
 %{_libdir}/pkgconfig/slurm.pc
 #############################################################################
 
 %files perlapi
-%defattr(-,root,root,0755)
 %{_perldir}/Slurm.pm
 %{_perldir}/Slurm/Bitstr.pm
 %{_perldir}/Slurm/Constant.pm
 %{_perldir}/Slurm/Hostlist.pm
-%{_perldir}/auto/Slurm/Slurm.so
+%attr(0755,root,root) %{_perldir}/auto/Slurm/Slurm.so
 %{_perldir}/Slurmdb.pm
-%{_perldir}/auto/Slurmdb/Slurmdb.so
+%attr(0755,root,root) %{_perldir}/auto/Slurmdb/Slurmdb.so
 %{_perldir}/auto/Slurmdb/autosplit.ix
 %{_perlman3dir}/Slurm*
 
@@ -576,6 +631,12 @@ rm -rf %{buildroot}
 %{_mandir}/man1/sjstat*
 #############################################################################
 
+%if %{with pam}
+%files -f pam.files pam_slurm
+%defattr(-,root,root)
+%endif
+#############################################################################
+
 %if %{with slurmrestd}
 %files slurmrestd
 %{_sbindir}/slurmrestd
@@ -622,5 +683,6 @@ rm -rf %{buildroot}
 %systemd_postun_with_restart slurmdbd.service
 
 %changelog
-* Tue Jan 18 2022 Maureen Jean <maureen.jean@intel.com> - 21.08.5.1-1
-- Update slurm to 21.08.5.1
+* Tue Jan 10 2023 Maureen Jean <maureen.jean@intel.com> - 22.05.7.1-1
+- Update slurm to 22.05.7.1
+
